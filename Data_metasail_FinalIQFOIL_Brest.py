@@ -32,8 +32,8 @@ def get_event_info():
 
     try:
         chrome_options = Options()
-        #chrome_options.add_argument("--headless")
-        #chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--window-size=1920,1080")
 
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
