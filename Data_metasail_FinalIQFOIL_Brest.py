@@ -5,216 +5,285 @@ import re
 from bs4 import BeautifulSoup
 import json
 import time
+import openpyxl
+import os  # Importez la bibliothèque pour vérifier l'existence des fichiers
 
 # Importations spécifiques à Selenium
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
-# Pour gérer automatiquement le pilote du navigateur
 from webdriver_manager.chrome import ChromeDriverManager
-# Pour les attentes explicites
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 
-def get_event_info():
+class MetasailScraper:
     """
-    Récupère les informations sur l'événement en utilisant Selenium pour charger la page
-    et exécuter le JavaScript, puis analyse le DOM final.
+    Classe pour récupérer et analyser les données de course du site Metasail.
     """
-    # URL de base sans l'ID de session temporaire
-    event_url = "https://app.metasail.it/ViewRecordedRace2022.aspx"
-    # Ajout du token nécessaire à la requête
-    params = {'idgara': '42423', 'token': '2COK'}
 
-    print("Initialisation du navigateur et chargement de la page avec JavaScript...")
+    def __init__(self, event_url, stats_url, event_id, token):
+        """
+        Initialise le scraper avec les URLs, l'ID de l'événement et le token.
 
-    try:
-        chrome_options = Options()
-        chrome_options.add_argument("--headless")
-        chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument("--window-size=1920,1080")
+        Args:
+            event_url (str): L'URL de la page de l'événement.
+            stats_url (str): L'URL du service web pour les statistiques.
+            event_id (str): L'identifiant de la course.
+            token (str): Le token de session pour l'authentification.
+        """
+        self.event_url = event_url
+        self.stats_url = stats_url
+        self.event_id = event_id
+        self.token = token
 
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+        # Attributs pour stocker les données récupérées
+        self.event_name = None
+        self.race_name = None
+        self.race_date = None
+        self.stats_data = None
 
-        # Construction de l'URL complète avec les paramètres
-        full_url = requests.Request('GET', event_url, params=params).prepare().url
+        # Dictionnaire de traduction pour les en-têtes du DataFrame
+        self.translations = {
+            'Seriale': 'Numéro de série',
+            'Nome': 'Nom du coureur',
+            'TotTempPerc': 'Temps total parcouru (s)',
+            'TotLungLato': 'Longueur totale du parcours (m)',
+            'TotDistPerc': 'Distance totale parcourue (m)',
+            'PosPartenza': 'Position de départ',
+            'TotDistRealeSuIdeale': 'Efficacité (Distance réelle/idéale) (%)',
+            'SegNum': 'Numéro de segment',
+            'TopSpeed': 'Vitesse maximale (noeuds)',
+            'TopVMG': 'VMG maximale',
+            'TopVMC': 'VMC maximale',
+            'AvgVMG': 'VMG moyenne',
+            'AvgVMC': 'VMC moyenne',
+            'AvgSpeed': 'Vitesse moyenne (noeuds)',
+            'CrtRaceSegSX': 'Bâbord (%)',
+            'CrtRaceSegDX': 'Tribord (%)',
+            'TimeSecPercorsi': 'Temps du segment (s)',
+            'SegDistRealePercorsa': 'Distance réelle du segment (m)',
+            'LungLato': 'Longueur du côté du segment (m)',
+            'DirLato': 'Direction du côté du segment',
+            'PercEffettivo': 'Efficacité du segment (%)',
+            'StartSeg': 'Début du segment (timestamp)',
+            'EndSeg': 'Fin du segment (timestamp)',
+            'SegEnteredRank': 'Classement entrée de segment',
+            'SegExitRank': 'Classement sortie de segment',
+        }
 
-        # Le pilote accède à l'URL. Selenium attend que la page soit entièrement chargée.
-        driver.get(full_url)
-
-        # Gestion de la bannière de cookies
+    def _get_event_info(self):
+        """
+        Méthode privée pour récupérer les informations de l'événement en utilisant Selenium.
+        """
+        print("Initialisation du navigateur et chargement de la page avec JavaScript...")
         try:
-            # On cherche un bouton avec le texte 'Accept all' ou similaire pour l'accepter
-            # Le sélecteur CSS '.cc-btn' est un choix courant pour ces bannières
-            cookie_accept_button = WebDriverWait(driver, 10).until(
-                EC.element_to_be_clickable((By.ID, 'cn-accept-cookie'))
+            chrome_options = Options()
+            #chrome_options.add_argument("--headless")
+            #chrome_options.add_argument("--disable-gpu")
+            chrome_options.add_argument("--window-size=1920,1080")
+
+            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+
+            params = {'idgara': self.event_id, 'token': self.token}
+            full_url = requests.Request('GET', self.event_url, params=params).prepare().url
+            driver.get(full_url)
+
+            try:
+                cookie_accept_button = WebDriverWait(driver, 10).until(
+                    EC.element_to_be_clickable((By.ID, 'cn-accept-cookie'))
+                )
+                cookie_accept_button.click()
+                print("Bannière de cookies acceptée.")
+                time.sleep(2)
+            except Exception:
+                print("Aucune bannière de cookies trouvée ou gérée, on continue.")
+
+            WebDriverWait(driver, 20).until(
+                EC.presence_of_element_located((By.TAG_NAME, "body"))
             )
-            cookie_accept_button.click()
-            print("Bannière de cookies acceptée.")
-            # Attendre un peu après le clic pour que la page se mette à jour
-            time.sleep(2)
-        except Exception:
-            print("Aucune bannière de cookies trouvée ou gérée, on continue.")
 
-        # Attente explicite pour s'assurer que l'élément <script> avec dataLayer.push est chargé
-        # On peut attendre que la balise body soit présente pour s'assurer que la page est rendue
-        WebDriverWait(driver, 20).until(
-            EC.presence_of_element_located((By.TAG_NAME, "body"))
-        )
+            page_source = driver.page_source
+            driver.quit()
 
-        # Récupération du code source de la page, y compris les modifications du DOM
-        page_source = driver.page_source
+            soup = BeautifulSoup(page_source, 'html.parser')
+            scripts = soup.find_all('script')
 
-        driver.quit()
+            for script in scripts:
+                if script.string and 'dataLayer.push' in script.string:
+                    match = re.search(r"dataLayer\.push\((.*?)\);", script.string, re.DOTALL)
+                    if match:
+                        json_like_string = match.group(1).strip()
+                        try:
+                            json_valid_string = re.sub(r"'([^']*)'", r'"\1"', json_like_string)
+                            data_dict = json.loads(json_valid_string)
+                            self.event_name = data_dict.get('eventName')
+                            self.race_name = data_dict.get('race')
+                            self.race_date = data_dict.get('raceDate')
 
-        soup = BeautifulSoup(page_source, 'html.parser')
-        scripts = soup.find_all('script')
+                            if self.event_name and self.race_name and self.race_date:
+                                print("Informations sur l'événement récupérées avec succès.")
+                                return True
+                        except (json.JSONDecodeError, ValueError):
+                            continue
+            print("Avertissement: Impossible de trouver les détails de l'événement dans la page.")
+            return False
 
-        event_name, race, race_date = None, None, None
+        except Exception as e:
+            print(f"Une erreur inattendue s'est produite lors de l'analyse: {e}")
+            return False
 
-        for script in scripts:
-            if script.string and 'dataLayer.push' in script.string:
-                match = re.search(r"dataLayer\.push\((.*?)\);", script.string, re.DOTALL)
-                if match:
-                    json_like_string = match.group(1).strip()
-                    try:
-                        json_valid_string = re.sub(r"'([^']*)'", r'"\1"', json_like_string)
-                        data_dict = json.loads(json_valid_string)
-                        event_name = data_dict.get('eventName')
-                        race = data_dict.get('race')
-                        race_date = data_dict.get('raceDate')
-
-                        if event_name and race and race_date:
-                            print("Informations sur l'événement récupérées avec succès en analysant l'objet JSON.")
-                            return event_name, race, race_date
-                    except (json.JSONDecodeError, ValueError) as e:
-                        print(f"Avertissement : Erreur lors de l'analyse JSON : {e}")
-                        continue
-
-        print("Avertissement: Impossible de trouver les détails de l'événement dans la page.")
-        return None, None, None
-
-    except Exception as e:
-        print(f"Une erreur inattendue s'est produite lors de l'analyse: {e}")
-        return None, None, None
-
-
-def scrape_and_export_data():
-    """
-    Scrapes sailing statistics from the Metasail website, parses the XML data,
-    and exports it to an Excel (.xlsx) file with French headers.
-    """
-    event_name, race_name, race_date = get_event_info()
-
-    if not event_name or not race_name or not race_date:
-        print("Les informations de l'événement n'ont pas pu être récupérées. Arrêt du script.")
-        return
-
-    stats_url = "https://app.metasail.it/(S(zdad033v3gz42eewebidnjgb))/MetaSailWS.asmx/getStatistiche?idgara=42423"
-
-    translations = {
-        'Seriale': 'Numéro de série',
-        'Nome': 'Nom du coureur',
-        'TotTempPerc': 'Temps total parcouru (s)',
-        'TotLungLato': 'Longueur totale du parcours (m)',
-        'TotDistPerc': 'Distance totale parcourue (m)',
-        'PosPartenza': 'Position de départ',
-        'TotDistRealeSuIdeale': 'Efficacité (Distance réelle/idéale) (%)',
-        'SegNum': 'Numéro de segment',
-        'TopSpeed': 'Vitesse maximale (noeuds)',
-        'TopVMG': 'VMG maximale',
-        'TopVMC': 'VMC maximale',
-        'AvgVMG': 'VMG moyenne',
-        'AvgVMC': 'VMC moyenne',
-        'AvgSpeed': 'Vitesse moyenne (noeuds)',
-        'CrtRaceSegSX': 'Bâbord (%)',
-        'CrtRaceSegDX': 'Tribord (%)',
-        'TimeSecPercorsi': 'Temps du segment (s)',
-        'SegDistRealePercorsa': 'Distance réelle du segment (m)',
-        'LungLato': 'Longueur du côté du segment (m)',
-        'DirLato': 'Direction du côté du segment',
-        'PercEffettivo': 'Efficacité du segment (%)',
-        'StartSeg': 'Début du segment (timestamp)',
-        'EndSeg': 'Fin du segment (timestamp)',
-        'SegEnteredRank': 'Classement entrée de segment',
-        'SegExitRank': 'Classement sortie de segment',
-    }
-
-    headers = {
-        'Accept': '*/*',
-        'Accept-Encoding': 'gzip, deflate, br, zstd',
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-    }
-
-    params = {
-        'idgara': '42423',
-        'token': '1UX5'
-    }
-
-    try:
+    def _get_stats_data(self):
+        """
+        Méthode privée pour récupérer les données statistiques via une requête POST.
+        """
         print("\nRécupération des données statistiques via POST...")
-        response = requests.post(stats_url, headers=headers, data=params)
-        response.raise_for_status()
+        headers = {
+            'Accept': '*/*',
+            'Accept-Encoding': 'gzip, deflate, br, zstd',
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+        }
+        params = {'idgara': self.event_id, 'token': self.token}
 
-        xml_content = response.text
-        xml_content = re.sub(r'<\?xml.*?\?>', '', xml_content).strip()
-        xml_content = re.sub(r'<string.*?>', '', xml_content, 1)
-        xml_content = xml_content.rsplit('</string>', 1)[0]
+        try:
+            response = requests.post(self.stats_url, headers=headers, data=params)
+            response.raise_for_status()
 
-        root = ET.fromstring(xml_content)
+            xml_content = response.text
+            xml_content = re.sub(r'<\?xml.*?\?>', '', xml_content).strip()
+            xml_content = re.sub(r'<string.*?>', '', xml_content, 1)
+            xml_content = xml_content.rsplit('</string>', 1)[0]
 
-        data_rows = []
+            self.stats_data = xml_content
+            print("Données statistiques récupérées avec succès.")
+            return True
 
-        for racer_data in root.findall('.//{http://meteda.it/}StatisticheDato'):
-            racer_info = {}
-            racer_info['Nom de l\'événement'] = event_name
-            racer_info['Course'] = race_name
-            racer_info['Date de la course'] = race_date
+        except requests.exceptions.RequestException as e:
+            print(f"Erreur lors de la récupération des données statistiques: {e}")
+            return False
+        except Exception as e:
+            print(f"Une erreur inattendue s'est produite lors de la récupération des stats: {e}")
+            return False
 
-            for child in racer_data:
-                if child.tag.endswith('}lstSegments'):
-                    continue
-                tag_name = child.tag.split('}')[1]
-                translated_name = translations.get(tag_name, tag_name)
-                racer_info[translated_name] = child.text
+    def _parse_and_prepare_dataframe(self):
+        """
+        Méthode privée pour parser les données XML et préparer le DataFrame.
+        """
+        if not self.stats_data or not self.event_name:
+            print("Données manquantes pour créer le DataFrame.")
+            return None
 
-            for segment_data in racer_data.findall('.//{http://meteda.it/}cInfoRaceSegment'):
-                segment_num = segment_data.find('{http://meteda.it/}SegNum').text
-                segment_prefix = f'Segment {segment_num} - '
+        try:
+            root = ET.fromstring(self.stats_data)
+            data_rows = []
 
-                for child in segment_data:
-                    tag_name = child.tag.split('}')[1]
-                    translated_name = translations.get(tag_name, tag_name)
-                    if tag_name == 'SegNum':
+            for racer_data in root.findall('.//{http://meteda.it/}StatisticheDato'):
+                racer_info = {
+                    'Nom de l\'événement': self.event_name,
+                    'Course': self.race_name,
+                    'Date de la course': self.race_date
+                }
+
+                for child in racer_data:
+                    if child.tag.endswith('}lstSegments'):
                         continue
-                    full_column_name = segment_prefix + translated_name
-                    racer_info[full_column_name] = child.text
+                    tag_name = child.tag.split('}')[1]
+                    # Utiliser `in` pour vérifier si la balise est dans le dictionnaire
+                    if tag_name in self.translations:
+                        translated_name = self.translations[tag_name]
+                        racer_info[translated_name] = child.text
 
-            data_rows.append(racer_info)
+                for segment_data in racer_data.findall('.//{http://meteda.it/}cInfoRaceSegment'):
+                    segment_num = segment_data.find('{http://meteda.it/}SegNum').text
+                    segment_prefix = f'Segment {segment_num} - '
 
-        if data_rows:
+                    for child in segment_data:
+                        tag_name = child.tag.split('}')[1]
+                        # Utiliser `in` pour vérifier si la balise est dans le dictionnaire
+                        if tag_name in self.translations:
+                            translated_name = self.translations[tag_name]
+                            if tag_name == 'SegNum':
+                                continue
+                            full_column_name = segment_prefix + translated_name
+                            racer_info[full_column_name] = child.text
+
+                data_rows.append(racer_info)
+
+            if not data_rows:
+                print("Aucune donnée statistique trouvée après le parsing.")
+                return None
+
             df = pd.DataFrame(data_rows)
-            first_cols = ['Nom de l\'événement', 'Course', 'Date de la course', translations['Nome']]
-            other_cols = [col for col in df.columns if col not in first_cols]
+            first_cols = ['Nom de l\'événement', 'Course', 'Date de la course', self.translations['Nome']]
+            # La logique pour les autres colonnes doit aussi filtrer les tags non traduits
+            all_translated_cols = [self.translations[tag] for tag in self.translations if tag in df.columns]
+            other_cols = [col for col in df.columns if col not in first_cols and col in all_translated_cols]
             other_cols.sort()
             df = df[first_cols + other_cols]
 
-            output_filename = "Metasail_Statistics.xlsx"
-            df.to_excel(output_filename, index=False)
-            print(f"\nLes données ont été exportées avec succès vers {output_filename}")
+            return df
+
+        except ET.ParseError as e:
+            print(f"Erreur lors de l'analyse des données XML: {e}")
+            return None
+        except Exception as e:
+            print(f"Une erreur inattendue s'est produite lors de la préparation du DataFrame: {e}")
+            return None
+
+    def scrape_and_export(self, output_filename="Metasail_Statistics.xlsx"):
+        """
+        Méthode principale pour exécuter le processus complet de scraping et d'export.
+        L'export se fait en ajoutant des lignes au fichier Excel existant.
+        """
+        if not self._get_event_info():
+            print("Arrêt du script en raison d'une erreur de récupération des infos de l'événement.")
+            return
+
+        if not self._get_stats_data():
+            print("Arrêt du script en raison d'une erreur de récupération des données statistiques.")
+            return
+
+        df_new_data = self._parse_and_prepare_dataframe()
+
+        if df_new_data is not None:
+            try:
+                # Vérifier si le fichier existe déjà
+                if os.path.exists(output_filename):
+                    print(f"Le fichier {output_filename} existe. Ajout des nouvelles données...")
+                    # Lire le fichier existant
+                    df_existing = pd.read_excel(output_filename, engine='openpyxl')
+                    # Concaténer les nouvelles données avec les données existantes
+                    df_combined = pd.concat([df_existing, df_new_data], ignore_index=True)
+                    # Réécrire le fichier avec le DataFrame combiné
+                    df_combined.to_excel(output_filename, index=False, engine='openpyxl')
+                    print(f"\nLes nouvelles données ont été ajoutées avec succès au fichier {output_filename}")
+                else:
+                    print(f"Le fichier {output_filename} n'existe pas. Création d'un nouveau fichier...")
+                    # Si le fichier n'existe pas, le créer
+                    df_new_data.to_excel(output_filename, index=False, engine='openpyxl')
+                    print(f"\nLe fichier {output_filename} a été créé avec les données de la course.")
+
+            except Exception as e:
+                print(f"Erreur lors de l'exportation du fichier Excel: {e}")
         else:
-            print("Aucune donnée statistique trouvée à exporter.")
-
-    except requests.exceptions.RequestException as e:
-        print(f"Erreur lors de la récupération des données statistiques: {e}")
-    except ET.ParseError as e:
-        print(f"Erreur lors de l'analyse des données XML: {e}")
-    except Exception as e:
-        print(f"Une erreur inattendue s'est produite: {e}")
+            print("Échec de l'exportation : DataFrame vide ou non valide.")
 
 
-if __name__ == "__main__":
-    scrape_and_export_data()
+# --- Utilisation du script ---
+if __name__ == "__main__":    # Définir ici les variables que vous voulez modifier
+    ID_GARA = "42391"
+    TOKEN_ACCES = "WPEG"
+    EVENT_URL = "https://app.metasail.it/(S(qhmcfygi2plxb5jw2xhuuvul))/ViewRecordedRace2022.aspx?idgara=42391&token=WPEG"
+    STATS_URL = "https://app.metasail.it/(S(qhmcfygi2plxb5jw2xhuuvul))/MetaSailWS.asmx/getStatistiche"
 
+    # Créez une instance de la classe en passant toutes les variables
+    scraper = MetasailScraper(
+        event_url=EVENT_URL,
+        stats_url=STATS_URL,
+        event_id=ID_GARA,
+        token=TOKEN_ACCES
+    )
+
+    # Exécutez la méthode principale
+    scraper.scrape_and_export()
