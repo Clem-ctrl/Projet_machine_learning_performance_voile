@@ -2,11 +2,10 @@ import requests
 import xml.etree.ElementTree as ET
 import pandas as pd
 import re
-from bs4 import BeautifulSoup
 import json
 import time
-import openpyxl
-import os  # Importez la bibliothèque pour vérifier l'existence des fichiers
+import os
+from urllib.parse import urlparse, parse_qs
 
 # Importations spécifiques à Selenium
 from selenium import webdriver
@@ -16,11 +15,13 @@ from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from bs4 import BeautifulSoup
 
 
 class MetasailScraper:
     """
     Classe pour récupérer et analyser les données de course du site Metasail.
+    (Your class code remains the same as you provided)
     """
 
     def __init__(self, event_url, stats_url, event_id, token):
@@ -80,15 +81,13 @@ class MetasailScraper:
         print("Initialisation du navigateur et chargement de la page avec JavaScript...")
         try:
             chrome_options = Options()
-            #chrome_options.add_argument("--headless")
-            #chrome_options.add_argument("--disable-gpu")
+            chrome_options.add_argument("--headless")
+            chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--window-size=1920,1080")
 
+            # Utiliser le self.event_url qui inclut déjà la session et les paramètres
             driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
-
-            params = {'idgara': self.event_id, 'token': self.token}
-            full_url = requests.Request('GET', self.event_url, params=params).prepare().url
-            driver.get(full_url)
+            driver.get(self.event_url)
 
             try:
                 cookie_accept_button = WebDriverWait(driver, 10).until(
@@ -147,6 +146,7 @@ class MetasailScraper:
         params = {'idgara': self.event_id, 'token': self.token}
 
         try:
+            # Note: We now use the stats_url passed during initialization
             response = requests.post(self.stats_url, headers=headers, data=params)
             response.raise_for_status()
 
@@ -176,52 +176,65 @@ class MetasailScraper:
 
         try:
             root = ET.fromstring(self.stats_data)
-            data_rows = []
+            if len(list(root)) == 0:
+                print("Avertissement : L'objet root est vide. Le parsing a probablement échoué.")
+                return None
+            else:
+                print("Le parsing a réussi et des éléments ont été trouvés.")
 
-            for racer_data in root.findall('.//{http://meteda.it/}StatisticheDato'):
+            data_rows = []
+            namespace = '{http://meteda.it/}'
+
+            for racer_data in root.findall(f'.//{namespace}StatisticheDato'):
                 racer_info = {
                     'Nom de l\'événement': self.event_name,
                     'Course': self.race_name,
                     'Date de la course': self.race_date
                 }
-
                 for child in racer_data:
-                    if child.tag.endswith('}lstSegments'):
-                        continue
-                    tag_name = child.tag.split('}')[1]
-                    # Utiliser `in` pour vérifier si la balise est dans le dictionnaire
-                    if tag_name in self.translations:
-                        translated_name = self.translations[tag_name]
-                        racer_info[translated_name] = child.text
+                    tag_name = child.tag.replace(namespace, '')
+                    if tag_name in ['Nome', 'Seriale'] and child.text:
+                        racer_info[self.translations.get(tag_name)] = child.text
 
-                for segment_data in racer_data.findall('.//{http://meteda.it/}cInfoRaceSegment'):
-                    segment_num = segment_data.find('{http://meteda.it/}SegNum').text
-                    segment_prefix = f'Segment {segment_num} - '
-
-                    for child in segment_data:
-                        tag_name = child.tag.split('}')[1]
-                        # Utiliser `in` pour vérifier si la balise est dans le dictionnaire
-                        if tag_name in self.translations:
-                            translated_name = self.translations[tag_name]
-                            if tag_name == 'SegNum':
-                                continue
-                            full_column_name = segment_prefix + translated_name
-                            racer_info[full_column_name] = child.text
-
-                data_rows.append(racer_info)
+                segments = racer_data.findall(f'.//{namespace}cInfoRaceSegment')
+                if not segments:
+                    data_rows.append(racer_info)
+                else:
+                    for segment_data in segments:
+                        segment_row = racer_info.copy()
+                        for child in segment_data:
+                            tag_name = child.tag.replace(namespace, '')
+                            if tag_name in self.translations and child.text:
+                                segment_row[self.translations.get(tag_name)] = child.text
+                        data_rows.append(segment_row)
 
             if not data_rows:
                 print("Aucune donnée statistique trouvée après le parsing.")
                 return None
 
             df = pd.DataFrame(data_rows)
-            first_cols = ['Nom de l\'événement', 'Course', 'Date de la course', self.translations['Nome']]
-            # La logique pour les autres colonnes doit aussi filtrer les tags non traduits
-            all_translated_cols = [self.translations[tag] for tag in self.translations if tag in df.columns]
-            other_cols = [col for col in df.columns if col not in first_cols and col in all_translated_cols]
-            other_cols.sort()
-            df = df[first_cols + other_cols]
+            timestamp_cols = ['Début du segment (timestamp)', 'Fin du segment (timestamp)']
+            for col in timestamp_cols:
+                if col in df.columns:
+                    try:
+                        df[col] = pd.to_numeric(df[col].astype(str).str.strip(), errors='coerce')
+                        df[col] = pd.to_datetime(df[col], unit='s', errors='coerce')
+                        df[col] = df[col].dt.strftime('%Y/%m/%d %H:%M:%S')
+                    except Exception as e:
+                        print(f"Erreur de conversion de la colonne {col}: {e}")
 
+            first_cols = ['Nom de l\'événement', 'Course', 'Date de la course', self.translations['Nome'],
+                          self.translations['Seriale']]
+            translated_tags = [self.translations[tag] for tag in self.translations.keys()]
+            other_cols = [col for col in df.columns if col not in first_cols and col in translated_tags]
+            other_cols.sort(key=lambda x: list(self.translations.values()).index(x) if x in list(
+                self.translations.values()) else -1)
+
+            final_cols = first_cols + other_cols
+            df = df.reindex(columns=final_cols)  # Use reindex for safety
+
+            print("Aperçu du DataFrame final :")
+            print(df.head())
             return df
 
         except ET.ParseError as e:
@@ -234,7 +247,6 @@ class MetasailScraper:
     def scrape_and_export(self, output_filename="Metasail_Statistics.xlsx"):
         """
         Méthode principale pour exécuter le processus complet de scraping et d'export.
-        L'export se fait en ajoutant des lignes au fichier Excel existant.
         """
         if not self._get_event_info():
             print("Arrêt du script en raison d'une erreur de récupération des infos de l'événement.")
@@ -244,46 +256,83 @@ class MetasailScraper:
             print("Arrêt du script en raison d'une erreur de récupération des données statistiques.")
             return
 
-        df_new_data = self._parse_and_prepare_dataframe()
-
-        if df_new_data is not None:
+        df_new = self._parse_and_prepare_dataframe()
+        if df_new is not None:
             try:
-                # Vérifier si le fichier existe déjà
                 if os.path.exists(output_filename):
-                    print(f"Le fichier {output_filename} existe. Ajout des nouvelles données...")
-                    # Lire le fichier existant
-                    df_existing = pd.read_excel(output_filename, engine='openpyxl')
-                    # Concaténer les nouvelles données avec les données existantes
-                    df_combined = pd.concat([df_existing, df_new_data], ignore_index=True)
-                    # Réécrire le fichier avec le DataFrame combiné
-                    df_combined.to_excel(output_filename, index=False, engine='openpyxl')
-                    print(f"\nLes nouvelles données ont été ajoutées avec succès au fichier {output_filename}")
+                    print(f"\nLe fichier '{output_filename}' existe, ajout des nouvelles données.")
+                    df_existing = pd.read_excel(output_filename)
+                    df_final = pd.concat([df_existing, df_new], ignore_index=True)
+                    df_final.to_excel(output_filename, index=False)
+                    print(f"Les données ont été ajoutées avec succès à {output_filename}")
                 else:
-                    print(f"Le fichier {output_filename} n'existe pas. Création d'un nouveau fichier...")
-                    # Si le fichier n'existe pas, le créer
-                    df_new_data.to_excel(output_filename, index=False, engine='openpyxl')
-                    print(f"\nLe fichier {output_filename} a été créé avec les données de la course.")
-
+                    print(f"\nLe fichier '{output_filename}' n'existe pas, création d'un nouveau fichier.")
+                    df_new.to_excel(output_filename, index=False)
+                    print(f"Les données ont été exportées avec succès vers {output_filename}")
             except Exception as e:
                 print(f"Erreur lors de l'exportation du fichier Excel: {e}")
         else:
             print("Échec de l'exportation : DataFrame vide ou non valide.")
 
 
-# --- Utilisation du script ---
-if __name__ == "__main__":    # Définir ici les variables que vous voulez modifier
-    ID_GARA = "42391"
-    TOKEN_ACCES = "WPEG"
-    EVENT_URL = "https://app.metasail.it/(S(qhmcfygi2plxb5jw2xhuuvul))/ViewRecordedRace2022.aspx?idgara=42391&token=WPEG"
-    STATS_URL = "https://app.metasail.it/(S(qhmcfygi2plxb5jw2xhuuvul))/MetaSailWS.asmx/getStatistiche"
+# --- NOUVELLE PARTIE : UTILISATION AUTOMATISÉE DU SCRIPT ---
+if __name__ == "__main__":
 
-    # Créez une instance de la classe en passant toutes les variables
-    scraper = MetasailScraper(
-        event_url=EVENT_URL,
-        stats_url=STATS_URL,
-        event_id=ID_GARA,
-        token=TOKEN_ACCES
-    )
+    # C'est la seule liste que vous avez besoin de modifier.
+    # Ajoutez simplement les URL sources des courses que vous voulez scraper.
+    SOURCE_URLS = [
+        "https://app.metasail.it/ViewRecordedRace2018.aspx?idgara=42375&token=PT35",
+        "https://app.metasail.it/ViewRecordedRace2018.aspx?idgara=42368&token=WCEO"
+        # Ajoutez d'autres URL ici
+    ]
 
-    # Exécutez la méthode principale
-    scraper.scrape_and_export()
+    OUTPUT_FILENAME = "Metasail_Statistics.xlsx"
+
+    # Boucle sur chaque URL source pour extraire les informations et lancer le scraper
+    for i, source_url in enumerate(SOURCE_URLS):
+        print(f"\n--- Lancement du scraping pour l'URL {i + 1}/{len(SOURCE_URLS)} ---\n")
+
+        try:
+            # 1. Analyser l'URL source pour extraire idgara et token
+            parsed_url = urlparse(source_url)
+            query_params = parse_qs(parsed_url.query)
+
+            event_id = query_params.get('idgara', [None])[0]
+            token = query_params.get('token', [None])[0]
+
+            if not event_id or not token:
+                print(f"ERREUR: idgara ou token introuvable dans l'URL : {source_url}. Passage au suivant.")
+                continue
+
+            print(f"ID Gara: {event_id}, Token: {token} extraits de l'URL source.")
+
+            # 2. Obtenir l'URL de session en faisant une requête GET
+            print("Récupération de l'URL de session...")
+            response = requests.get(source_url, timeout=10)
+            response.raise_for_status()  # S'assure que la requête a réussi
+
+            # L'URL de l'événement est l'URL finale après redirection, incluant les paramètres
+            final_event_url = response.url
+            print(f"URL de session trouvée : {final_event_url}")
+
+            # 3. Construire l'URL des statistiques à partir de l'URL de l'événement
+            # On prend la base de l'URL de l'événement et on remplace la fin
+            url_base = final_event_url.rsplit('/', 1)[0]
+            stats_url = f"{url_base}/MetaSailWS.asmx/getStatistiche?={event_id}&{token}"
+            print(f"URL des statistiques construite : {stats_url}")
+
+            # 4. Initialiser et lancer le scraper avec les informations trouvées
+            scraper = MetasailScraper(
+                event_url=final_event_url,  # On passe l'URL complète avec session et paramètres
+                stats_url=stats_url,
+                event_id=event_id,
+                token=token
+            )
+            scraper.scrape_and_export(output_filename=OUTPUT_FILENAME)
+
+        except requests.exceptions.RequestException as e:
+            print(f"Une erreur réseau est survenue pour l'URL {source_url}: {e}")
+        except Exception as e:
+            print(f"Une erreur inattendue est survenue pour l'URL {source_url}: {e}")
+
+    print("\n\n--- Tous les scrapings sont terminés. ---")
