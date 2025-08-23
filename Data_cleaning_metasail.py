@@ -11,7 +11,6 @@ class DataCleaner:
     def __init__(self, file_path):
         """
         Initialise le DataCleaner et charge le jeu de données.
-
         :param file_path: Chemin vers le fichier CSV.
         """
         try:
