@@ -56,44 +56,54 @@ class DataCleaner:
             nom_complet = f"{prenom} {nom_famille}".strip()
             elements = nom_complet.split()
 
-            # Le prénom est soit le premier mot, soit le dernier.
-            # On vérifie si l'un de ces mots est un prénom avec une recherche floue.
-            premier_mot = elements[0] if len(elements) > 0 else ''
-            dernier_mot = elements[-1] if len(elements) > 1 else ''
-
-            # La méthode `search_fuzzy` retourne les prénoms les plus proches
-            # avec un score de correspondance.
-            resultat_premier = self.nd.search_fuzzy(premier_mot)
-            resultat_dernier = self.nd.search_fuzzy(dernier_mot)
+            # Cas où le nom complet est vide
+            if not elements:
+                return '', ''
 
             nouveau_prenom = ''
             nouveau_nom = ''
 
-            # Si le premier mot est un prénom avec une bonne correspondance floue
-            if resultat_premier and resultat_premier[0]['score'] > 0.8:  # On utilise un seuil de 0.8
+            # On vérifie d'abord si le premier mot ou le dernier est un prénom connu via fuzzy search
+            premier_mot = elements[0]
+            dernier_mot = elements[-1]
+
+            # Un seuil de 0.8 est un bon compromis pour le fuzzy matching
+            # Une correspondance exacte est aussi couverte par un score de 1.0
+
+            # Vérification du premier mot
+            resultat_premier = self.nd.search_fuzzy(premier_mot)
+            if resultat_premier and resultat_premier[0]['score'] > 0.8:
                 nouveau_prenom = premier_mot
                 nouveau_nom = ' '.join(elements[1:])
-            # Si le dernier mot est un prénom avec une bonne correspondance floue
-            elif resultat_dernier and resultat_dernier[0]['score'] > 0.8:
-                nouveau_prenom = dernier_mot
-                nouveau_nom = ' '.join(elements[:-1])
-            # Par défaut, on garde la logique initiale si la correspondance floue n'est pas concluante
-            else:
-                nouveau_prenom_elements = []
-                nouveau_nom_famille_elements = []
-                for element in elements:
-                    resultat_recherche = self.nd.search(element)
-                    if resultat_recherche['first_name']:
-                        nouveau_prenom_elements.append(element)
-                    else:
-                        nouveau_nom_famille_elements.append(element)
+                return nouveau_prenom, nouveau_nom
 
-                if not nouveau_prenom_elements and elements:
-                    nouveau_prenom = elements[0]
-                    nouveau_nom = ' '.join(elements[1:])
+            # Vérification du dernier mot
+            if len(elements) > 1:
+                resultat_dernier = self.nd.search_fuzzy(dernier_mot)
+                if resultat_dernier and resultat_dernier[0]['score'] > 0.8:
+                    nouveau_prenom = dernier_mot
+                    nouveau_nom = ' '.join(elements[:-1])
+                    return nouveau_prenom, nouveau_nom
+
+            # Si aucune correspondance fuzzy n'est trouvée, on utilise la logique initiale
+            # pour identifier les prénoms dans le nom complet
+            nouveau_prenom_elements = []
+            nouveau_nom_famille_elements = []
+
+            for element in elements:
+                resultat_recherche = self.nd.search(element)
+                if resultat_recherche['first_name']:
+                    nouveau_prenom_elements.append(element)
                 else:
-                    nouveau_prenom = ' '.join(nouveau_prenom_elements)
-                    nouveau_nom = ' '.join(nouveau_nom_famille_elements)
+                    nouveau_nom_famille_elements.append(element)
+
+            # Si aucun prénom n'a été trouvé, on suppose que le premier mot est le prénom
+            if not nouveau_prenom_elements and elements:
+                nouveau_prenom = elements[0]
+                nouveau_nom = ' '.join(elements[1:])
+            else:
+                nouveau_prenom = ' '.join(nouveau_prenom_elements)
+                nouveau_nom = ' '.join(nouveau_nom_famille_elements)
 
             return nouveau_prenom, nouveau_nom
 
@@ -186,9 +196,7 @@ if __name__ == '__main__':
         # Afficher des informations sur les nouvelles colonnes créées
         print("\n--- Informations sur les nouvelles colonnes ---")
         print("Valeurs uniques dans 'Sexe':", dataframe_nettoye['Sexe'].unique())
-        print("Valeurs uniques dans 'Catégorie d'âge':", dataframe_nettoye['Catégorie d'
-        âge
-        '].unique())
+        print("Valeurs uniques dans 'Catégorie d'âge':", dataframe_nettoye['Catégorie d\'âge'].unique())
         print("\n--- Aperçu de la colonne 'Course' nettoyée ---")
         print(dataframe_nettoye['Course'].head())
 
