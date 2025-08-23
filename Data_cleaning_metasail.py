@@ -11,15 +11,18 @@ class DataCleaner:
     def __init__(self, file_path):
         """
         Initialise le DataCleaner et charge le jeu de données.
-        :param file_path: Chemin vers le fichier CSV.
+        :param file_path: Chemin vers le fichier Excel.
         """
         try:
-            self.df = pd.read_csv(file_path)
-            print("✅ Fichier chargé avec succès.")
+            self.df = pd.read_excel(file_path)
+            print("✅ Fichier Excel chargé avec succès.")
             # Initialise la base de données de prénoms pour la correction
             self.nd = NameDataset()
         except FileNotFoundError:
             print(f"❌ Erreur : Le fichier {file_path} n'a pas été trouvé.")
+            self.df = None
+        except Exception as e:
+            print(f"❌ Une erreur s'est produite lors de la lecture du fichier : {e}")
             self.df = None
 
     def supprimer_colonnes_inutiles(self, colonnes_a_supprimer):
@@ -155,20 +158,20 @@ class DataCleaner:
         """
         return self.df
 
-    def sauvegarder_en_csv(self, chemin_sortie):
+    def sauvegarder_en_excel(self, chemin_sortie):
         """
-        Sauvegarde le DataFrame nettoyé dans un nouveau fichier CSV.
+        Sauvegarde le DataFrame nettoyé dans un nouveau fichier Excel.
         """
         if self.df is not None:
-            self.df.to_csv(chemin_sortie, index=False, encoding='utf-8-sig')
+            self.df.to_excel(chemin_sortie, index=False)
             print(f"💾 Fichier nettoyé sauvegardé avec succès sous : {chemin_sortie}")
 
 
 # --- Bloc d'exécution principal ---
 if __name__ == '__main__':
     # Spécifiez le chemin de votre fichier d'entrée ici
-    fichier_entree = 'Metasail_Statistics_ML_test.xlsx - Sheet1.csv'
-    fichier_sortie = 'Metasail_Statistics_ML_test_cleaned.csv'
+    fichier_entree = 'Metasail_Statistics_ML_test.xlsx'
+    fichier_sortie = 'Metasail_Statistics_ML_test_cleaned.xlsx'
 
     # Création d'une instance du nettoyeur de données
     nettoyeur = DataCleaner(fichier_entree)
@@ -200,4 +203,4 @@ if __name__ == '__main__':
         print(dataframe_nettoye['Course'].head())
 
         # 4. Sauvegarder le résultat
-        nettoyeur.sauvegarder_en_csv(fichier_sortie)
+        nettoyeur.sauvegarder_en_excel(fichier_sortie)
