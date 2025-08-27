@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="Black">
+<<<<<<< HEAD
     <option name="sdkName" value="Python 3.12 (OpenWeatherMap)" />
   </component>
   <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.12 (OpenWeatherMap)" project-jdk-type="Python SDK" />
+=======
+    <option name="sdkName" value="Python 3.12 (Metasail_races_data)" />
+  </component>
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.12 (Metasail_races_data)" project-jdk-type="Python SDK" />
+>>>>>>> e81b31615d6a1198fcc30def11795dd3d69ffe61
 </project>
