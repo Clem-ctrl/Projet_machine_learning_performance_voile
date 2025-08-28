@@ -4,9 +4,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1538b070-c95e-44d8-b6a0-afd343e8f567" name="Changes" comment="data event + coureur avec classes + bug event">
+    <list default="true" id="42f7e6f5-7490-4c53-b60c-c87ffe38ac5e" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/Data_processing.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Fetch_wind_data.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Gestion_valeurs_aberrantes.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/Metasail_races_data.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Metasail_races_data.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data_metasail_FinalIQFOIL_Brest.py" beforeDir="false" afterPath="$PROJECT_DIR$/Data_metasail_FinalIQFOIL_Brest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Data_cleaning_metasail.py" beforeDir="false" afterPath="$PROJECT_DIR$/Data_cleaning_metasail.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Data_metasail_FinalIQFOIL_Brest.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -23,65 +29,74 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo">{
-  &quot;associatedIndex&quot;: 0
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;Clem-ctrl&quot;
+  }
 }</component>
-  <component name="ProjectId" id="30xcyx8obirnDLwCLbVVBT6zxrQ" />
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Clem-ctrl/Projet_machine_learning_performance_voile.git&quot;,
+    &quot;accountId&quot;: &quot;8b94e8a3-7aac-4050-930b-7f52ce8056d1&quot;
+  }
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 8
+}</component>
+  <component name="ProjectId" id="31gyAbMKbSk5mYHeUYKpGsDeYSA" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Python.Data_metasail_FinalIQFOIL_Brest.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python.Data_cleaning_metasail.executor": "Run",
+    "Python.Data_processing.executor": "Run",
+    "Python.Fetch_wind_data.executor": "Run",
+    "Python.Gestion_valeurs_aberrantes.executor": "Run",
+    "Python.Test.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
   }
-}</component>
+}]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Byron Barette\PycharmProjects\Projet_machine_learning_performance_voile" />
+    </key>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-0509580d9d50-746f403e7f0c-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-241.14494.241" />
+        <option value="bundled-python-sdk-b3ae9b5d7125-f0eec537fc84-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-252.23892.439" />
       </set>
     </attachedChunks>
   </component>
-  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="1538b070-c95e-44d8-b6a0-afd343e8f567" name="Changes" comment="" />
-      <created>1754572923578</created>
+      <changelist id="42f7e6f5-7490-4c53-b60c-c87ffe38ac5e" name="Changes" comment="" />
+      <created>1755959867699</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1754572923578</updated>
+      <updated>1755959867699</updated>
     </task>
-    <task id="LOCAL-00001" summary="Data coureurs + course">
+    <task id="LOCAL-00001" summary="clean avec fuzzy bug">
       <option name="closed" value="true" />
-      <created>1754668312945</created>
+      <created>1755960897058</created>
       <option name="number" value="00001" />
       <option name="presentableId" value="LOCAL-00001" />
       <option name="project" value="LOCAL" />
-      <updated>1754668312945</updated>
+      <updated>1755960897058</updated>
     </task>
-    <task id="LOCAL-00002" summary="data event + coureur avec classes">
-      <option name="closed" value="true" />
-      <created>1754687766587</created>
-      <option name="number" value="00002" />
-      <option name="presentableId" value="LOCAL-00002" />
-      <option name="project" value="LOCAL" />
-      <updated>1754687766587</updated>
-    </task>
-    <task id="LOCAL-00003" summary="data event + coureur avec classes + bug event">
-      <option name="closed" value="true" />
-      <created>1754691209620</created>
-      <option name="number" value="00003" />
-      <option name="presentableId" value="LOCAL-00003" />
-      <option name="project" value="LOCAL" />
-      <updated>1754691209620</updated>
-    </task>
-    <option name="localTasksCounter" value="4" />
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -89,16 +104,20 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="CUSTOM_BOOLEAN_PROPERTIES">
+                <map>
+                  <entry key="Show.Git.Branches" value="false" />
+                </map>
+              </option>
+            </State>
           </value>
         </entry>
       </map>
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Data coureurs + course" />
-    <MESSAGE value="data event + coureur avec classes" />
-    <MESSAGE value="data event + coureur avec classes + bug event" />
-    <option name="LAST_COMMIT_MESSAGE" value="data event + coureur avec classes + bug event" />
+    <MESSAGE value="clean avec fuzzy bug" />
+    <option name="LAST_COMMIT_MESSAGE" value="clean avec fuzzy bug" />
   </component>
 </project>
