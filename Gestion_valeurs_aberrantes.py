@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from datetime import timedelta
 
+
 class PerformanceVerifier:
     """
     Une classe pour valider les métriques de performance des segments Metasail
@@ -96,13 +97,13 @@ class PerformanceVerifier:
                 f"🔹 {len(short_distances_df)} lignes trouvées où la 'Distance réelle' est anormalement plus courte que la 'Longueur du côté'.")
             print("\nAperçu des 5 premières lignes :")
             print(short_distances_df[['Nom Complet', 'Nom de l\'événement', 'Distance réelle du segment (m)',
-                                       'Longueur du côté du segment (m)']].head().to_string(index=False))
+                                      'Longueur du côté du segment (m)']].head().to_string(index=False))
         else:
             print(f"✅ Aucune ligne anormale trouvée avec une tolérance de {tolerance} mètres.")
 
     def check_total_distance_consistency(self, tolerance=30):
         """
-        Vérifie la cohérence entre la distance totale parcourue et la longueur
+        Meme vérif mais sur tout le parcours. Vérifie la cohérence entre la distance totale parcourue et la longueur
         totale du parcours, avec une tolérance.
         :param tolerance: Marge de tolérance en mètres.
         """
@@ -157,35 +158,88 @@ class PerformanceVerifier:
 
         initial_rows = len(self.df)
 
-        # Critère 1 : Z-Score élevé sur la 'Distance réelle du segment (m)'
-        col_distance = 'Distance réelle du segment (m)'
-        if col_distance in self.df.columns:
-            mean = self.df[col_distance].mean()
-            std = self.df[col_distance].std()
-            z_score_threshold = 3.0
-            outlier_mask = np.abs((self.df[col_distance] - mean) / std) > z_score_threshold
-            self.df = self.df[~outlier_mask]
-            print(f"✅ {outlier_mask.sum()} lignes supprimées en raison de valeurs aberrantes (Z-Score) sur la distance.")
+        # Critère 1 : Z-Score élevé sur la 'différence' entre distance réel
+        col_distance = 'Longueur du segment (m)'
+        col_parcourue = 'Distance réelle parcourue segment (m)'
 
-        # Critère 2 : 'Distance réelle du segment' anormalement courte
+        if col_distance in self.df.columns and col_parcourue in self.df.columns:
+            # Calcul de la nouvelle colonne
+            self.df['diff_distance'] = self.df[col_distance] - self.df[col_parcourue]
+
+            # Application du Z-Score sur la différence
+            mean_diff = self.df['diff_distance'].mean()
+            std_diff = self.df['diff_distance'].std()
+            z_score_threshold = 3.0
+
+            outlier_mask = np.abs((self.df['diff_distance'] - mean_diff) / std_diff) > z_score_threshold
+            self.df = self.df[~outlier_mask]
+
+            print(
+                f"✅ {outlier_mask.sum()} lignes supprimées en raison de valeurs aberrantes (Z-Score) sur la différence de distance.")
+
+            # Suppression de la colonne temporaire
+            self.df = self.df.drop(columns=['diff_distance'])
+        else:
+            print(
+                f"⚠️ Colonnes requises ('{col_distance}' ou '{col_parcourue}') introuvables. Le critère 1 n'a pas été appliqué.")
+
+        # Critère 2 : 'Distance réelle du segment' plus courte que le segment
         col_longueur = 'Longueur du côté du segment (m)'
         if col_distance in self.df.columns and col_longueur in self.df.columns:
             tolerance = 30
             short_distance_mask = self.df[col_distance] < (self.df[col_longueur] - tolerance)
             self.df = self.df[~short_distance_mask]
-            print(f"✅ {short_distance_mask.sum()} lignes supprimées en raison de distances réelles anormalement courtes.")
+            print(
+                f"✅ {short_distance_mask.sum()} lignes supprimées en raison de distances réelles anormalement courtes.")
 
         # Critère 3 : Incohérence de la distance totale et de l'efficacité
-        col_parcouru = 'Distance totale parcourue (m)'
+        col_parcouru_total = 'Distance totale parcourue (m)'
         col_longueur_totale = 'Longueur totale du parcours (m)'
-        if col_parcouru in self.df.columns and col_longueur_totale in self.df.columns:
+        if col_parcouru_total in self.df.columns and col_longueur_totale in self.df.columns:
             tolerance = 30
-            inconsistent_mask = self.df[col_parcouru] < (self.df[col_longueur_totale] - tolerance)
+            inconsistent_mask = self.df[col_parcouru_total] < (self.df[col_longueur_totale] - tolerance)
             self.df = self.df[~inconsistent_mask]
             print(f"✅ {inconsistent_mask.sum()} lignes supprimées en raison d'incohérences sur les distances totales.")
 
         final_rows = len(self.df)
         print(f"Un total de {initial_rows - final_rows} ligne(s) a été supprimé(e).")
+
+    def check_wind_direction_alignment(self):
+        """
+        Vérifie la concordance entre 'wind_orientation_metasail' et 'Wind Direction (deg)'.
+        Affiche un résumé du nombre de lignes avec un écart de plus de 10 degrés.
+        """
+        print("\n" + "=" * 50)
+        print("✔️ VÉRIFICATION DE LA CONCORDANCE DES DIRECTIONS DU VENT")
+        print("=" * 50)
+
+        # Vérifier si les colonnes nécessaires existent
+        if "wind_orientation_metasail" not in self.df.columns or "Wind Direction (deg)" not in self.df.columns:
+            print(
+                "❌ Colonnes 'wind_orientation_metasail' ou 'Wind Direction (deg)' manquantes. Vérification impossible.")
+            return
+
+        # Remplacer les NaN par une valeur qui sera ignorée
+        df_temp = self.df.dropna(subset=["wind_orientation_metasail", "Wind Direction (deg)"]).copy()
+
+        if df_temp.empty:
+            print("⚠️ Aucune ligne valide pour la vérification de la direction du vent.")
+            return
+
+        # Calculer la différence d'angle en tenant compte du passage à 360/0 degrés
+        angle_diff = np.abs(df_temp["wind_orientation_metasail"] - df_temp["Wind Direction (deg)"])
+        adjusted_angle_diff = np.minimum(angle_diff, 360 - angle_diff)
+
+        # Compter le nombre de lignes où l'écart est supérieur à 10 degrés
+        mismatched_lines = adjusted_angle_diff[adjusted_angle_diff > 10].count()
+        total_lines = len(df_temp)
+
+        print(f"📊 Résultat de la vérification :")
+        print(f"  - Total de lignes avec des données de vent : {total_lines}")
+        print(f"  - Lignes avec un écart > 10 degrés : {mismatched_lines}")
+        print(f"  - Pourcentage d'écart : {(mismatched_lines / total_lines * 100):.2f}%")
+        print("✅ Vérification terminée.")
+
 
 # --- Bloc d'exécution principal ---
 if __name__ == '__main__':
@@ -197,4 +251,5 @@ if __name__ == '__main__':
         verifier.detect_outliers_on_distance()
         verifier.identify_short_distances(tolerance=30)
         verifier.check_total_distance_consistency(tolerance=30)
+        verifier.check_wind_direction_alignment()  # Appel de la nouvelle fonction
         verifier.supprimer_anomalies()

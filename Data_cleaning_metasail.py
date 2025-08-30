@@ -38,29 +38,6 @@ class DataCleaner:
         self.df.drop(columns=colonnes_existantes, inplace=True, errors='ignore')
         print(f"🗑️ Colonnes supprimées : {colonnes_existantes}")
 
-    def unifier_noms_complets(self):
-        """
-        Fusionne les colonnes 'Prénom' et 'Nom de famille' en 'Nom Complet',
-        et standardise l'ordre des mots pour une présentation homogène.
-        """
-        if self.df is None or 'Prénom' not in self.df.columns or 'Nom de famille' not in self.df.columns:
-            print("⚠️ Colonnes 'Prénom' ou 'Nom de famille' introuvables. Étape d'unification des noms ignorée.")
-            return
-
-        print("🔄 Fusion et standardisation des noms...")
-        prenom = self.df['Prénom'].fillna('')
-        nom_famille = self.df['Nom de famille'].fillna('')
-        self.df['Nom Complet'] = (prenom + ' ' + nom_famille).str.strip()
-
-        def standardiser_ordre(nom):
-            mots = nom.split()
-            mots.sort()
-            return ' '.join(mots)
-
-        self.df['Nom Complet'] = self.df['Nom Complet'].apply(standardiser_ordre)
-        self.df.drop(columns=['Prénom', 'Nom de famille'], inplace=True)
-        print("✅ Colonne 'Nom Complet' créée et standardisée. Colonnes originales supprimées.")
-
     def filtrer_statut_course(self):
         """
         Supprime les lignes où le statut de la course est 'abandonned' ou 'recall'.
@@ -215,7 +192,6 @@ if __name__ == '__main__':
         colonnes_a_supprimer = ['Position de départ', 'Classement sortie de segment', 'Vitesse maximale (noeuds)',
                                 'VMG maximale', 'VMC maximale', 'VMG moyenne']
         nettoyeur.supprimer_colonnes_inutiles(colonnes_a_supprimer)
-        nettoyeur.unifier_noms_complets()
         nettoyeur.traiter_colonne_course()
         nettoyeur.filtrer_statut_course()
         nettoyeur.splitter_date(nom_colonne_date='Date de la course')

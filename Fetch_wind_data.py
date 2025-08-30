@@ -5,6 +5,7 @@ import pandas as pd
 from datetime import datetime, date
 import pytz
 import os
+from collections import defaultdict
 
 # --- Configuration ---
 API_KEY = "ce67699e859dc91888145732202e8f26"
@@ -12,32 +13,11 @@ API_KEY = "ce67699e859dc91888145732202e8f26"
 # Constante de conversion de la vitesse du vent de mètres par seconde (m/s) à des nœuds (kts)
 M_S_TO_KNOTS = 1.94384
 
-# Définir la liste des villes et leurs plages de dates associées.
-CITIES_TO_PROCESS = [
-    {
-        "city_name": "Embrun, FR",
-        "date_ranges": [
-            {"start_day": date(2024, 7, 8), "end_day": date(2024, 7, 11)}
-        ]
-    },
-    {
-        "city_name": "Cagliari, IT",
-        "date_ranges": [
-            {"start_day": date(2024, 4, 12), "end_day": date(2024, 4, 14)}
-        ]
-    },
-    {
-        "city_name": "Cadiz, ES",
-        "date_ranges": [
-            {"start_day": date(2023, 10, 25), "end_day": date(2023, 10, 28)}
-        ]
-    }
-]
-
 # Points de terminaison de l'API pour OpenWeatherMap
 GEO_API_ENDPOINT = "http://api.openweathermap.org/geo/1.0/direct"
 WEATHER_API_ENDPOINT = "https://api.openweathermap.org/data/3.0/onecall/timemachine"
 OUTPUT_FILE = "weather_data_cleaned.xlsx"
+INPUT_FILE = "Metasail_Statistics_ML_test_processed.xlsx"
 
 
 # --- Classe principale du processeur de météo ---
@@ -96,7 +76,6 @@ class WeatherProcessor:
                     if "data" in data and len(data["data"]) > 0:
                         hourly_data = data["data"][0]
 
-                        # Utilisation de .get() avec des valeurs par défaut pour éviter les erreurs si les clés sont manquantes
                         rain_data = hourly_data.get('rain', {})
 
                         extracted_metrics = {
@@ -104,14 +83,12 @@ class WeatherProcessor:
                             "City": city_name,
                             "Latitude": coords['lat'],
                             "Longitude": coords['lon'],
-                            # La température est maintenant en Celsius directement grâce au paramètre units=metric
                             "Temperature (°C)": round(hourly_data.get('temp', 0), 2),
                             "Wind Speed (kts)": round(hourly_data.get('wind_speed', 0) * M_S_TO_KNOTS, 2),
-                            # Nouvelles variables ajoutées ici
                             "Pressure (hPa)": hourly_data.get('pressure'),
                             "Humidity (%)": hourly_data.get('humidity'),
                             "Wind Direction (deg)": hourly_data.get('wind_deg'),
-                            "Rain (mm)": rain_data.get('1h', 0)  # Récupère '1h' de l'objet 'rain', sinon 0
+                            "Rain (mm)": rain_data.get('1h', 0)
                         }
                         weather_data.append(extracted_metrics)
                         print(f"Données récupérées pour : {current_dt_utc.strftime('%Y-%m-%d %H:%M:%S UTC')}")
@@ -144,13 +121,11 @@ class WeatherProcessor:
 
             new_df = pd.DataFrame(weather_data)
 
-            # Créer des colonnes séparées pour le jour, le mois, l'année et l'heure
-            new_df['Day'] = new_df['DateTimeUTC'].dt.day
-            new_df['Month'] = new_df['DateTimeUTC'].dt.month
-            new_df['Year'] = new_df['DateTimeUTC'].dt.year
+            new_df['Jour'] = new_df['DateTimeUTC'].dt.day
+            new_df['Mois'] = new_df['DateTimeUTC'].dt.month
+            new_df['Année'] = new_df['DateTimeUTC'].dt.year
             new_df['Time'] = new_df['DateTimeUTC'].dt.strftime('%H:%M:%S')
 
-            # Mise à jour des colonnes finales pour inclure les nouvelles données
             final_columns = ['Day', 'Month', 'Year', 'Time', 'City', 'Latitude', 'Longitude', 'Temperature (°C)',
                              'Pressure (hPa)', 'Humidity (%)', 'Wind Speed (kts)', 'Wind Direction (deg)', 'Rain (mm)']
             new_df = new_df[final_columns]
@@ -170,15 +145,11 @@ class WeatherProcessor:
                 print(f"\nLe fichier '{self.output_file}' n'existe pas, création d'un nouveau fichier...")
                 final_df = new_df
 
-            # --- Correction pour l'erreur "SINGLE POSITIONAL INDEXER IS OUT-OF-BOUNDS" ---
             if not final_df.empty:
-                # Créer une série de dates/heures temporaire pour trouver correctement les dates min et max
                 final_df['Full_Date'] = pd.to_datetime(final_df[['Year', 'Month', 'Day']])
-
                 min_date = final_df['Full_Date'].min().strftime('%Y-%m-%d')
                 max_date = final_df['Full_Date'].max().strftime('%Y-%m-%d')
-
-                final_df = final_df.drop(columns='Full_Date')  # Supprimer la colonne temporaire
+                final_df = final_df.drop(columns='Full_Date')
             else:
                 min_date, max_date = "N/A", "N/A"
 
@@ -190,14 +161,77 @@ class WeatherProcessor:
             print(f"\n❌ Une erreur est survenue lors de l'exportation vers Excel : {e}")
 
 
+def read_metasail_data(filepath):
+    """
+    Lit le fichier Excel de Metasail, extrait les lieux et les plages de dates,
+    et les formate pour le processeur météo.
+    """
+    if not os.path.exists(filepath):
+        print(f"Erreur : Le fichier d'entrée '{filepath}' est introuvable.")
+        return []
+
+    try:
+        df = pd.read_excel(filepath)
+
+        # Vérification des colonnes nécessaires
+        required_cols = ['Lieu de l\'événement', 'Début du segment (timestamp)', 'Fin du segment (timestamp)']
+        if not all(col in df.columns for col in required_cols):
+            print(f"Erreur : Le fichier '{filepath}' ne contient pas toutes les colonnes requises.")
+            print(f"Colonnes attendues : {required_cols}")
+            return []
+
+        # Convertir les timestamps en datetime et gérer les valeurs manquantes
+        df['start_dt'] = pd.to_datetime(pd.to_numeric(df['Début du segment (timestamp)'], errors='coerce'), unit='s')
+        df['end_dt'] = pd.to_datetime(pd.to_numeric(df['Fin du segment (timestamp)'], errors='coerce'), unit='s')
+
+        df = df.dropna(subset=['Lieu de l\'événement', 'start_dt', 'end_dt'])
+
+        # Grouper par lieu et trouver les dates min/max pour chaque événement
+        weather_data_ref = defaultdict(lambda: {"start": None, "end": None})
+        for _, row in df.iterrows():
+            city = row['Lieu de l\'événement']
+            start_dt = row['start_dt']
+            end_dt = row['end_dt']
+
+            if not weather_data_ref[city]["start"] or start_dt < weather_data_ref[city]["start"]:
+                weather_data_ref[city]["start"] = start_dt
+            if not weather_data_ref[city]["end"] or end_dt > weather_data_ref[city]["end"]:
+                weather_data_ref[city]["end"] = end_dt
+
+        # Formater les données pour le script météo
+        cities_to_process = [
+            {"city_name": city, "date_ranges": [{"start_day": data["start"].date(), "end_day": data["end"].date()}]}
+            for city, data in weather_data_ref.items() if data["start"] and data["end"]
+        ]
+
+        return cities_to_process
+
+    except Exception as e:
+        print(f"Une erreur est survenue lors de la lecture du fichier Excel : {e}")
+        return []
+
+
 # --- Point d'entrée du script ---
 if __name__ == "__main__":
-    processor = WeatherProcessor(
-        api_key=API_KEY,
-        geo_endpoint=GEO_API_ENDPOINT,
-        weather_endpoint=WEATHER_API_ENDPOINT,
-        output_file=OUTPUT_FILE
-    )
+    print(f"Étape 1 : Lecture du fichier d'entrée '{INPUT_FILE}' pour récupérer les lieux et les dates.")
+    cities_to_process = read_metasail_data(INPUT_FILE)
 
-    for entry in CITIES_TO_PROCESS:
-        processor.process_and_export(entry["city_name"], entry["date_ranges"])
+    if cities_to_process:
+        print("\nÉtape 2 : Lancement de la récupération des données météo.")
+        print("Villes et dates à traiter :")
+        for city in cities_to_process:
+            print(
+                f"  - {city['city_name']}: du {city['date_ranges'][0]['start_day']} au {city['date_ranges'][0]['end_day']}")
+
+        processor = WeatherProcessor(
+            api_key=API_KEY,
+            geo_endpoint=GEO_API_ENDPOINT,
+            weather_endpoint=WEATHER_API_ENDPOINT,
+            output_file=OUTPUT_FILE
+        )
+        for entry in cities_to_process:
+            processor.process_and_export(entry["city_name"], entry["date_ranges"])
+
+        print("\nProcessus d'extraction des données météo terminé avec succès.")
+    else:
+        print("\nAucune donnée valide n'a pu être extraite du fichier Excel. Le processus est annulé.")
