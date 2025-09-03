@@ -3,9 +3,9 @@ import numpy as np
 from datetime import timedelta, datetime
 
 # Configuration des fichiers
-FICHIER_METASAIL = "Metasail_Statistics_ML_test_cleaned.xlsx"
+FICHIER_METASAIL = "Metasail_Statistics_unified_cleaned.xlsx"
 FICHIER_WEATHER = "weather_data_cleaned.xlsx"
-FICHIER_SORTIE = "Metasail_Statistics_ML_test_processed.xlsx"
+FICHIER_SORTIE = "Metasail_Statistics_unified_processed.xlsx"
 
 
 class DataProcessor:
@@ -44,27 +44,26 @@ class DataProcessor:
             self.df_weather[["Year", "Month", "Day"]].astype(str).agg("-".join, axis=1), errors="coerce"
         ).dt.date
 
-        # Traitement des heures pour trouver le timestamp de l'heure centrale
-        self.df_metasail["Début du segment_dt"] = pd.to_datetime(
-            self.df_metasail["Début du segment (timestamp)"], format="%H:%M:%S", errors="coerce"
+        # Correction de la gestion des dates : Combinaison de la date et de l'heure
+        base_dt = pd.to_datetime(
+            self.df_metasail['Année'].astype(str) + '-' + self.df_metasail['Mois'].astype(str) + '-' + self.df_metasail[
+                'Jour'].astype(str),
+            errors='coerce'
         )
-        self.df_metasail["Fin du segment_dt"] = pd.to_datetime(
-            self.df_metasail["Fin du segment (timestamp)"], format="%H:%M:%S", errors="coerce"
-        )
-        self.df_metasail["Temps du segment_dt"] = self.df_metasail.apply(
-            lambda row: (
-                    row["Début du segment_dt"] + (row["Fin du segment_dt"] - row["Début du segment_dt"]) / 2).time()
-            if pd.notna(row["Début du segment_dt"]) and pd.notna(row["Fin du segment_dt"]) and row[
-                "Début du segment_dt"] <= row["Fin du segment_dt"]
-            else (row["Début du segment_dt"] + timedelta(days=1) + (
-                    row["Fin du segment_dt"] - row["Début du segment_dt"] + timedelta(
-                days=1)) / 2).time() if pd.notna(row["Début du segment_dt"]) and pd.notna(row["Fin du segment_dt"])
-            else np.nan,
-            axis=1
-        )
-#calcule l'heure centrale du segment et l'associe à la ligne du DataFrame df_metasail
 
-        self.df_weather["Time_dt"] = pd.to_datetime(self.df_weather["Time"], format="%H:%M:%S", errors="coerce").dt.time
+        start_timedelta = pd.to_timedelta(self.df_metasail["Début du segment (timestamp)"].astype(str))
+        end_timedelta = pd.to_timedelta(self.df_metasail["Fin du segment (timestamp)"].astype(str))
+
+        self.df_metasail["Début du segment_dt"] = base_dt + start_timedelta
+        self.df_metasail["Fin du segment_dt"] = base_dt + end_timedelta
+
+        # Gérer le cas où la fin du segment est le jour suivant
+        self.df_metasail.loc[self.df_metasail["Fin du segment_dt"] < self.df_metasail[
+            "Début du segment_dt"], "Fin du segment_dt"] += timedelta(days=1)
+
+        # Calculer le temps central du segment pour la fusion
+        self.df_metasail["Temps du segment_dt"] = (self.df_metasail["Début du segment_dt"] + (
+                    self.df_metasail["Fin du segment_dt"] - self.df_metasail["Début du segment_dt"]) / 2).dt.time
 
         print("✅ Données de date et heure préparées.")
 
@@ -86,6 +85,10 @@ class DataProcessor:
         # Itération sur chaque ligne du DataFrame Metasail
         for index, row_metasail in self.df_metasail.iterrows():
             if pd.isna(row_metasail["Date"]) or pd.isna(row_metasail["Temps du segment_dt"]):
+                continue
+
+            # Vérification des valeurs manquantes dans la colonne 'Lieu de l'événement'
+            if pd.isna(row_metasail["Lieu de l'événement"]):
                 continue
 
             lieu = row_metasail["Lieu de l'événement"].lower()
@@ -132,7 +135,7 @@ class DataProcessor:
         print("=" * 50)
 
         required_cols = ["Début du segment (timestamp)", "Fin du segment (timestamp)",
-                         "Distance réelle du segment (m)", "Longueur du côté du segment (m)"]
+                         "Distance réelle parcourue segment (m)", "Longueur du segment (m)"]
         if not all(col in self.df_metasail.columns for col in required_cols):
             print("❌ Colonnes requises pour le recalcule manquantes.")
             return
@@ -145,10 +148,10 @@ class DataProcessor:
 
         safe_time = self.df_metasail["Temps du segment (s)"].replace(0, np.nan)
         self.df_metasail["Vitesse moyenne (noeuds)"] = (self.df_metasail[
-                                                            "Distance réelle du segment (m)"] / safe_time) * 1.94384
+                                                            "Distance réelle parcourue segment (m)"] / safe_time) * 1.94384
         print("✅ 'Vitesse moyenne (noeuds)' recalculée avec succès.")
 
-        self.df_metasail["VMC moyenne"] = (self.df_metasail["Longueur du côté du segment (m)"] / safe_time) * 1.94384
+        self.df_metasail["VMC moyenne"] = (self.df_metasail["Longueur du segment (m)"] / safe_time) * 1.94384
         print("✅ 'VMC moyenne' recalculée avec succès.")
 
         # Suppression des colonnes existantes de métriques pour éviter les doublons
@@ -164,7 +167,8 @@ class DataProcessor:
         print("=" * 50)
 
         # Vérification des colonnes nécessaires
-        required_cols = ["Efficacité du segment (%)", "Wind Speed (kts)", "Cap magnétique", "Wind Direction (deg)"]
+        required_cols = ["Efficacité du segment (%)", "Wind Speed (kts)", "Cap magnétique (deg)",
+                         "Wind Direction (deg)"]
         if not all(col in self.df_metasail.columns for col in required_cols):
             print(
                 f"❌ Colonnes requises pour le calcul des nouvelles métriques manquantes : {list(set(required_cols) - set(self.df_metasail.columns))}")
@@ -179,7 +183,7 @@ class DataProcessor:
         # Un angle de 0° ou 360° signifie que la bouée est directement au vent.
         # Un angle de 180° signifie que la bouée est directement sous le vent.
         self.df_metasail["Angle Vent-Cap"] = np.abs(
-            self.df_metasail["Cap magnétique"] - self.df_metasail["Wind Direction (deg)"])
+            self.df_metasail["Cap magnétique (deg)"] - self.df_metasail["Wind Direction (deg)"])
         self.df_metasail["Angle Vent-Cap"] = self.df_metasail["Angle Vent-Cap"].apply(lambda x: min(x, 360 - x))
 
         # Définition des conditions de navigation (près ou portant)
@@ -199,6 +203,7 @@ class DataProcessor:
         self.df_metasail.loc[portant_condition, "Efficacité Portant (%)"] = self.df_metasail.loc[
             portant_condition, "Efficacité du segment (%)"]
         print("✅ 'Efficacité Portant (%)' calculé avec succès.")
+
 
 def main():
     """ Fonction principale pour exécuter le traitement des données. """

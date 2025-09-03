@@ -17,6 +17,8 @@ class DataCleaner:
         try:
             self.df = pd.read_excel(file_path)
             print("✅ Fichier Excel chargé avec succès.")
+            for col in self.df.columns:
+                print(f"  - {col}")
             # Initialise la base de données de prénoms pour l'assignation de sexe
             self.nd = NameDataset()
         except FileNotFoundError:
@@ -94,13 +96,14 @@ class DataCleaner:
     def completer_sexe_manquant(self):
         """
         Remplit les valeurs manquantes dans la colonne 'Sexe' en se basant
-        sur l'analyse du prénom le plus probable dans 'Nom Complet'.
+        sur l'analyse du prénom le plus probable dans 'Nom complet'.
         """
-        if self.df is None or 'Nom Complet' not in self.df.columns or 'Sexe' not in self.df.columns:
-            print("⚠️ Colonnes 'Nom Complet' ou 'Sexe' introuvables. Impossible de compléter le sexe.")
+        if self.df is None or 'Nom complet' not in self.df.columns or 'Sexe' not in self.df.columns:
+            print("⚠️ Colonnes 'Nom complet' ou 'Sexe' introuvables. Impossible de compléter le sexe.")
             return
 
         print("\n🔄 Début de la complétion des sexes manquants...")
+        print("ℹ️ Utilisation de la colonne 'Nom complet' pour la prédiction.")
 
         def predire_sexe_par_prenom(nom_complet):
             if not isinstance(nom_complet, str) or not nom_complet:
@@ -134,11 +137,8 @@ class DataCleaner:
             else:
                 return np.nan
 
-        if 'Sexe' not in self.df.columns:
-            self.df['Sexe'] = pd.Series(dtype='object')
-
         masque_sexe_vide = self.df['Sexe'].isnull()
-        self.df.loc[masque_sexe_vide, 'Sexe'] = self.df.loc[masque_sexe_vide, 'Nom Complet'].apply(
+        self.df.loc[masque_sexe_vide, 'Sexe'] = self.df.loc[masque_sexe_vide, 'Nom complet'].apply(
             predire_sexe_par_prenom)
 
         print("\n✅ Tentative de complétion des sexes manquants terminée.")
@@ -146,21 +146,23 @@ class DataCleaner:
     def completer_age_manquant(self):
         """
         Remplit les valeurs manquantes dans la colonne 'Catégorie d'âge'
-        en se basant sur les valeurs non vides pour le même "Numéro de série" et "Nom Complet".
+        en se basant sur les valeurs non vides pour le même "Numéro de série" et "Nom complet".
         """
-        if self.df is None or "Catégorie d'âge" not in self.df.columns or 'Numéro de série' not in self.df.columns or 'Nom Complet' not in self.df.columns:
+        if self.df is None or "Catégorie d'âge" not in self.df.columns or 'Numéro de série' not in self.df.columns or 'Nom complet' not in self.df.columns:
             print(
-                "⚠️ Colonnes requises ('Catégorie d'âge', 'Numéro de série', 'Nom Complet') introuvables. Complétion de l'âge ignorée.")
+                "⚠️ Colonnes requises ('Catégorie d'âge', 'Numéro de série', 'Nom complet') introuvables. Complétion de l'âge ignorée.")
             return
 
         print("\n🔄 Début de la complétion des âges manquants...")
+        print("ℹ️ Utilisation des colonnes 'Numéro de série' et 'Nom complet' pour la prédiction.")
+
         lignes_initiales = self.df["Catégorie d'âge"].isnull().sum()
-        valeurs_valides = self.df.dropna(subset=["Catégorie d'âge"]).set_index(['Numéro de série', 'Nom Complet'])[
+        valeurs_valides = self.df.dropna(subset=["Catégorie d'âge"]).set_index(['Numéro de série', 'Nom complet'])[
             "Catégorie d'âge"].to_dict()
 
         def appliquer_age(row):
             if pd.isnull(row["Catégorie d'âge"]):
-                cle = (row['Numéro de série'], row['Nom Complet'])
+                cle = (row['Numéro de série'], row['Nom complet'])
                 if cle in valeurs_valides:
                     return valeurs_valides.get(cle)
                 else:
@@ -183,8 +185,8 @@ class DataCleaner:
 
 
 if __name__ == '__main__':
-    fichier_entree = 'Metasail_Statistics_ML_test.xlsx'
-    fichier_sortie = 'Metasail_Statistics_ML_test_cleaned.xlsx'
+    fichier_entree = 'Metasail_Statistics_unified.xlsx'
+    fichier_sortie = 'Metasail_Statistics_unified_cleaned.xlsx'
 
     nettoyeur = DataCleaner(fichier_entree)
 
