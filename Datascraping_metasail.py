@@ -23,7 +23,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import WebDriverException, TimeoutException
 
-# --- Constantes pour un scraping plus "poli" ---
+# --- Constantes pour un scraping plus "poli" et plus robuste ---
 USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36",
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36",
@@ -32,7 +32,13 @@ USER_AGENTS = [
 ]
 MIN_DELAY_SECONDS = 9
 MAX_DELAY_SECONDS = 30
-MAX_RETRIES = 5  # Augmentation du nombre de tentatives
+MAX_RETRIES = 5
+
+# --- Configuration du répertoire de profil persistant pour Selenium ---
+PERSISTENT_DATA_DIR = os.path.join(os.path.expanduser('~'), 'selenium_chrome_profile')
+if not os.path.exists(PERSISTENT_DATA_DIR):
+    os.makedirs(PERSISTENT_DATA_DIR)
+    print(f"Création du répertoire de profil persistant : {PERSISTENT_DATA_DIR}")
 
 
 # -----------------------------------------------------------
@@ -76,6 +82,7 @@ def find_urls_from_local_files(directory_path):
 
 # -----------------------------------------------------------
 class MetasailScraper:
+    """Classe pour encapsuler la logique de scraping d'une URL Metasail."""
 
     def __init__(self, event_url, event_id, token, source_name, session):
         self.event_url = event_url
@@ -101,134 +108,107 @@ class MetasailScraper:
             'SegExitRank': 'Classement sortie de segment',
         }
 
-    # Modifiez la fonction _get_page_info_with_selenium
-    def _get_page_info_with_selenium(self):
+    def get_page_info_with_selenium(self, driver):
         """
         Récupère les informations de la page en utilisant Selenium.
-        Le script fait glisser le curseur du temps par pas de 100 pixels jusqu'à ce que les données du vent soient disponibles.
+        Le script fait glisser le curseur du temps pour charger les données, avec une logique de réessai.
+        Le driver est passé en argument pour réutiliser la même session.
         """
-        for attempt in range(MAX_RETRIES):
-            driver = None
-            temp_dir = None
-            try:
-                print(f"Étape 2 : Récupération des infos de la course... ⛵ (Tentative {attempt + 1}/{MAX_RETRIES})")
-                temp_dir = tempfile.mkdtemp()
-                options = Options()
-                #options.add_argument('--headless')
-                options.add_argument('--disable-gpu')
-                options.add_argument('--no-sandbox')
-                options.add_argument(f'user-agent={random.choice(USER_AGENTS)}')
-                options.add_argument(f'--user-data-dir={temp_dir}')
+        try:
+            print(f"Étape 2 : Récupération des infos de la course... ⛵")
+            print(f"    -> 🌐 Navigation vers : {self.event_url}")
+            driver.get(self.event_url)
 
-                driver = webdriver.Chrome(options=options)
-                print(f"    -> 🌐 Navigation vers : {self.event_url}")
-                driver.get(self.event_url)
+            wait = WebDriverWait(driver, 45)
 
-                time.sleep(3)  # Pause initiale pour laisser la page charger
-                wait = WebDriverWait(driver, 45)
+            print("    -> ⏳ Attente de l'apparition du curseur de la barre de temps...")
+            slider_handle = wait.until(
+                EC.presence_of_element_located((By.CLASS_NAME, 'rangeSlider__handle'))
+            )
 
-                print("    -> ⏳ Attente de l'apparition du curseur de la barre de temps...")
-                slider_handle = wait.until(
-                    EC.presence_of_element_located((By.CLASS_NAME, 'rangeSlider__handle'))
-                )
-                print("    -> ✅ Curseur trouvé. Déplacement par pas de 100 pixels.")
+            # --- Nouvelle fonctionnalité : attente pour un déplacement plus doux ---
+            print("    -> ⏳ Attente de 3 secondes avant le premier déplacement du curseur...")
+            time.sleep(3)
 
-                slider_bar = driver.find_element(By.CLASS_NAME, 'rangeSlider')
-                slider_width = slider_bar.size['width']
+            wind_data_found = False
+            for attempt_move in range(MAX_RETRIES):
+                if wind_data_found:
+                    break
 
-                actions = ActionChains(driver)
-                actions.click_and_hold(slider_handle).perform()
-
+                # Vérification initiale si les données de vent sont déjà chargées
                 try:
-                    if driver.find_element(By.ID, 'lblWind').text != "":
-                        print("    -> ✅ Données de vent déjà présentes. Pas besoin de déplacer le curseur.")
-                        actions.release().perform()
+                    wind_text = driver.find_element(By.ID, 'lblWind').text
+                    if wind_text and wind_text.strip():
+                        print(f"    -> ✅ Données de vent déjà présentes. Pas besoin de déplacer le curseur.")
+                        wind_data_found = True
+                        break
                 except:
                     pass
 
-                wind_data_found = False
-                current_x = 0
+                # --- Mise à jour de la logique de déplacement pour une fiabilité accrue ---
+                print(f"    -> 🔄 Tentative de glisser-déposer du curseur {attempt_move + 1}/{MAX_RETRIES}...")
 
-                # --- BOUCLE DE GLISSEMENT PAR PAS DE 100 PIXELS ---
-                while current_x <= slider_width and not wind_data_found:
-                    move_by = 100  # Pas fixe de 100 pixels
-                    if current_x + move_by > slider_width:
-                        move_by = slider_width - current_x
+                try:
+                    actions = ActionChains(driver)
+                    # La méthode drag_and_drop_by_offset est plus stable car elle opère directement sur l'élément.
+                    # On simule un glisser-déposer du curseur sur 100 pixels.
+                    actions.drag_and_drop_by_offset(slider_handle, 100, 0).perform()
+                except Exception as e:
+                    print(f"    -> ❌ Le glisser-déposer a échoué : {e}. Réessai...")
 
-                    actions.move_by_offset(move_by, 0).perform()
-                    current_x += move_by
+                # --- Attente pour laisser le temps à la page de charger les données ---
+                print("    -> ⏳ Attente de 2 secondes pour le chargement des données...")
+                time.sleep(2)
 
-                    time.sleep(1)  # Pause pour laisser le temps à l'API de répondre
-
-                    # Vérifier si le texte du vent est disponible
-                    try:
-                        wind_text = driver.find_element(By.ID, 'lblWind').text
-                        if wind_text and wind_text.strip():
-                            print(f"    -> ✅ Données de vent trouvées après un déplacement de {current_x} pixels.")
-                            actions.release().perform()
-                            wind_data_found = True
-                    except:
-                        pass
-
-                # Si le curseur a atteint la fin de la barre sans trouver les données
-                if not wind_data_found:
-                    print("    -> ❌ Le curseur a atteint la fin de la barre sans trouver les données de vent.")
-                    actions.release().perform()
-                    raise TimeoutException("Le texte du vent n'est jamais apparu.")
-
-                # --- FIN DE LA BOUCLE ---
-
-                # ... Le reste du code pour scraper et exporter les données reste inchangé ...
-                wind_direction_text = driver.find_element(By.ID, 'lblWind').text
-                wind_direction_text = re.sub(r'Wind|°', '', wind_direction_text).strip()
-
-                soup = BeautifulSoup(driver.page_source, 'html.parser')
-                script_content = ""
-                for script_tag in soup.find_all('script'):
-                    if 'dataLayer.push' in script_tag.text:
-                        script_content = script_tag.text
+                try:
+                    wind_text = driver.find_element(By.ID, 'lblWind').text
+                    if wind_text and wind_text.strip():
+                        print(f"    -> ✅ Données de vent trouvées après un glisser-déposer réussi.")
+                        wind_data_found = True
                         break
+                except:
+                    print("    -> ❌ Données de vent non trouvées. Réessai...")
 
-                event_name, race_name, race_date = "N/A", "N/A", "N/A"
-                if script_content:
-                    try:
-                        data_layer_match = re.search(r'dataLayer\.push\(({.*?})\);', script_content, re.DOTALL)
-                        if data_layer_match:
-                            json_str = data_layer_match.group(1).replace("'", '"')
-                            data_dict = json.loads(json_str)
-                            event_name = data_dict.get('eventName', "N/A")
-                            race_name = data_dict.get('race', "N/A")
-                            race_date = data_dict.get('raceDate', "N/A")
-                            print("    -> ✅ Données 'dataLayer' trouvées et extraites avec succès.")
-                    except Exception as e:
-                        print(f"    -> ❌ Erreur lors de l'analyse du JSON 'dataLayer': {e}")
+            if not wind_data_found:
+                print(
+                    "    -> ❌ Le curseur n'a pas pu être déplacé ou les données de vent n'ont jamais été trouvées après plusieurs tentatives.")
+                raise TimeoutException("Échec du déplacement du curseur.")
 
-                final_url = driver.current_url
-                cookies_list = driver.get_cookies()
-                for cookie in cookies_list:
-                    self.session.cookies.set(cookie['name'], cookie['value'])
-                print("    -> ✅ Cookies de Selenium ajoutés à la session requests.")
-                print(f"    -> ✅ Page récupérée avec succès. URL finale : {final_url}")
-                print(f"    -> ✅ Orientation du vent trouvée : {wind_direction_text}")
-                print(f"    -> ✅ Nom de la compétition : {event_name}")
-                print(f"    -> ✅ Nom de la course : {race_name}")
-                print(f"    -> ✅ Date de la course : {race_date}")
+            wind_direction_text = driver.find_element(By.ID, 'lblWind').text
+            wind_direction_text = re.sub(r'Wind|°', '', wind_direction_text).strip()
 
-                return final_url, wind_direction_text, event_name, race_name, race_date
+            soup = BeautifulSoup(driver.page_source, 'html.parser')
+            script_content = next((s.text for s in soup.find_all('script') if 'dataLayer.push' in s.text), "")
 
-            except (WebDriverException, TimeoutException) as e:
-                print(f"    -> ❌ Erreur lors de l'utilisation de Selenium (tentative {attempt + 1}): {e}")
-                if attempt < MAX_RETRIES - 1:
-                    print("    -> 🔄 Nouvelle tentative dans 10 secondes...")
-                    time.sleep(10)
-                else:
-                    print("    -> ❌ Nombre maximal de tentatives pour Selenium atteint. Abandon.")
-            finally:
-                if driver:
-                    driver.quit()
-                if temp_dir and os.path.exists(temp_dir):
-                    shutil.rmtree(temp_dir)
-                    print("    -> ✅ Répertoire temporaire de l'utilisateur nettoyé.")
+            event_name, race_name, race_date = "N/A", "N/A", "N/A"
+            if script_content:
+                try:
+                    data_layer_match = re.search(r'dataLayer\.push\(({.*?})\);', script_content, re.DOTALL)
+                    if data_layer_match:
+                        json_str = data_layer_match.group(1).replace("'", '"')
+                        data_dict = json.loads(json_str)
+                        event_name = data_dict.get('eventName', "N/A")
+                        race_name = data_dict.get('race', "N/A")
+                        race_date = data_dict.get('raceDate', "N/A")
+                        print("    -> ✅ Données 'dataLayer' trouvées et extraites avec succès.")
+                except Exception as e:
+                    print(f"    -> ❌ Erreur lors de l'analyse du JSON 'dataLayer': {e}")
+
+            final_url = driver.current_url
+            cookies_list = driver.get_cookies()
+            for cookie in cookies_list:
+                self.session.cookies.set(cookie['name'], cookie['value'])
+            print("    -> ✅ Cookies de Selenium ajoutés à la session requests.")
+            print(f"    -> ✅ Page récupérée avec succès. URL finale : {final_url}")
+            print(f"    -> ✅ Orientation du vent trouvée : {wind_direction_text}")
+            print(f"    -> ✅ Nom de la compétition : {event_name}")
+            print(f"    -> ✅ Nom de la course : {race_name}")
+            print(f"    -> ✅ Date de la course : {race_date}")
+
+            return final_url, wind_direction_text, event_name, race_name, race_date
+
+        except (WebDriverException, TimeoutException) as e:
+            print(f"    -> ❌ Erreur lors de l'utilisation de Selenium : {e}")
 
         return None, None, None, None, None
 
@@ -239,7 +219,7 @@ class MetasailScraper:
             try:
                 delay = random.uniform(MIN_DELAY_SECONDS, MAX_DELAY_SECONDS)
                 print(
-                    f"    -> ⏳ (Tentative {attempt + 1}/{MAX_RETRIES}) Pause de {delay:.2f}s avant la requête vers {url.split('?')[0].split('/')[-1]}...")
+                    f"    -> ⏳ (Tentative {attempt + 1}/{MAX_RETRIES}) Pause de {delay:.2f}s avant la requête...")
                 time.sleep(delay)
                 headers = {
                     "User-Agent": random.choice(USER_AGENTS),
@@ -275,7 +255,10 @@ class MetasailScraper:
             print("    -> ✅ Données brutes reçues. Nettoyage du XML...")
             xml_content = response.text
             xml_content = re.sub(r'<\?xml.*?\?>', '', xml_content).strip()
-            xml_content = re.sub(r'<string.*?>', '', xml_content, 1).rsplit('</string>', 1)[0]
+
+            # --- Correction de l'avertissement de dépréciation ---
+            # Le paramètre 'count' est maintenant explicitement nommé pour éviter la dépréciation
+            xml_content = re.sub(r'<string.*?>', '', xml_content, count=1).rsplit('</string>', 1)[0]
             self.stats_data = xml_content
             print("    -> ✅ Données statistiques prêtes à être analysées.")
             return True
@@ -345,8 +328,8 @@ class MetasailScraper:
             print(f"    -> ❌ Erreur XML: {e}", file=sys.stderr)
             return None
 
-    def scrape_and_export(self, output_filename):
-        final_url, wind_direction, event_name, race_name, race_date = self._get_page_info_with_selenium()
+    def scrape_and_export(self, driver, output_filename):
+        final_url, wind_direction, event_name, race_name, race_date = self.get_page_info_with_selenium(driver)
 
         if not final_url:
             print("    -> 🛑 Arrêt du processus pour cette URL en raison d'un échec de la récupération des infos.")
@@ -408,56 +391,72 @@ if __name__ == "__main__":
     successful_urls = 0
     failed_urls = 0
 
-    with requests.Session() as session:
-        urls_to_process = find_urls_from_local_files(LOCAL_DIRECTORY_PATH)
+    # --- Initialisation du driver une seule fois ---
+    try:
+        options = Options()
+        # options.add_argument('--headless')
+        options.add_argument('--disable-gpu')
+        options.add_argument('--no-sandbox')
+        options.add_argument(f'user-agent={random.choice(USER_AGENTS)}')
+        options.add_argument(f'--user-data-dir={PERSISTENT_DATA_DIR}')
+        driver = webdriver.Chrome(options=options)
 
-        if not urls_to_process:
-            print("    -> ❌ Aucune URL de course trouvée. Fin du script.")
-            sys.exit()
+        with requests.Session() as session:
+            urls_to_process = find_urls_from_local_files(LOCAL_DIRECTORY_PATH)
 
-        print("\nÉtape 6 : Vérification des doublons dans le fichier de sortie... 🕵️‍♀️")
-        if os.path.exists(OUTPUT_FILENAME):
-            try:
-                print(f"    -> 🔎 Lecture du fichier '{OUTPUT_FILENAME}'...")
-                df_existing = pd.read_excel(OUTPUT_FILENAME, sheet_name='Sheet1')
-                if 'ID' in df_existing.columns:
-                    processed_files = set(df_existing['ID'].dropna().unique())
-                    print(f"    -> ✅ {len(processed_files)} fichier(s) déjà traité(s) trouvé(s).")
-                else:
-                    print("    -> ⚠️ Avertissement : La colonne 'ID' est absente. Impossible de vérifier les doublons.")
-            except Exception as e:
-                print(f"    -> ❌ Avertissement : Impossible de lire le fichier existant. {e}")
+            if not urls_to_process:
+                print("    -> ❌ Aucune URL de course trouvée. Fin du script.")
+                sys.exit()
 
-        total_urls = len(urls_to_process)
-        for i, source_url in enumerate(urls_to_process):
-            source_name = urlparse(source_url).query
-            print(f"\n--- 🏁 Traitement de l'URL {i + 1}/{total_urls} : {source_url} ---")
-            if source_name in processed_files:
-                print(f"    -> ⏭️ L'URL '{source_name}' a déjà été traitée. Passage à la suivante.")
-                successful_urls += 1
-                continue
-            try:
-                parsed_url = urlparse(source_url)
-                query_params = parse_qs(parsed_url.query)
-                event_id, token = query_params.get('idgara', [None])[0], query_params.get('token', [None])[0]
-                if not event_id or not token:
-                    print(f"    -> ❌ ERREUR: idgara/token introuvable dans : {source_url}.")
-                    failed_urls += 1
-                    continue
-                scraper = MetasailScraper(
-                    event_url=source_url,
-                    event_id=event_id,
-                    token=token,
-                    source_name=source_name,
-                    session=session
-                )
-                if scraper.scrape_and_export(output_filename=OUTPUT_FILENAME):
+            print("\nÉtape 6 : Vérification des doublons dans le fichier de sortie... 🕵️‍♀️")
+            if os.path.exists(OUTPUT_FILENAME):
+                try:
+                    print(f"    -> 🔎 Lecture du fichier '{OUTPUT_FILENAME}'...")
+                    df_existing = pd.read_excel(OUTPUT_FILENAME, sheet_name='Sheet1')
+                    if 'ID' in df_existing.columns:
+                        processed_files = set(df_existing['ID'].dropna().unique())
+                        print(f"    -> ✅ {len(processed_files)} fichier(s) déjà traité(s) trouvé(s).")
+                    else:
+                        print(
+                            "    -> ⚠️ Avertissement : La colonne 'ID' est absente. Impossible de vérifier les doublons.")
+                except Exception as e:
+                    print(f"    -> ❌ Avertissement : Impossible de lire le fichier existant. {e}")
+
+            total_urls = len(urls_to_process)
+            for i, source_url in enumerate(urls_to_process):
+                source_name = urlparse(source_url).query
+                print(f"\n--- 🏁 Traitement de l'URL {i + 1}/{total_urls} : {source_url} ---")
+                if source_name in processed_files:
+                    print(f"    -> ⏭️ L'URL '{source_name}' a déjà été traitée. Passage à la suivante.")
                     successful_urls += 1
-                else:
+                    continue
+                try:
+                    parsed_url = urlparse(source_url)
+                    query_params = parse_qs(parsed_url.query)
+                    event_id, token = query_params.get('idgara', [None])[0], query_params.get('token', [None])[0]
+                    if not event_id or not token:
+                        print(f"    -> ❌ ERREUR: idgara/token introuvable dans : {source_url}.")
+                        failed_urls += 1
+                        continue
+                    scraper = MetasailScraper(
+                        event_url=source_url,
+                        event_id=event_id,
+                        token=token,
+                        source_name=source_name,
+                        session=session
+                    )
+                    if scraper.scrape_and_export(driver=driver, output_filename=OUTPUT_FILENAME):
+                        successful_urls += 1
+                    else:
+                        failed_urls += 1
+                except Exception as e:
+                    print(f"    -> ❌ Une erreur inattendue est survenue pour l'URL {source_url}: {e}", file=sys.stderr)
                     failed_urls += 1
-            except Exception as e:
-                print(f"    -> ❌ Une erreur inattendue est survenue pour l'URL {source_url}: {e}", file=sys.stderr)
-                failed_urls += 1
+
+    finally:
+        if 'driver' in locals() and driver:
+            print("\n--- 🌐 Fermeture de la session Chrome... ---")
+            driver.quit()
 
     print("\n" + "=" * 50)
     print("--- ✅ Rapport final de scraping ✅ ---")
