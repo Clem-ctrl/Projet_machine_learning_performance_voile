@@ -4,15 +4,17 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="42f7e6f5-7490-4c53-b60c-c87ffe38ac5e" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Data_processing.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Fetch_wind_data.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Gestion_valeurs_aberrantes.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/Metasail_races_data.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Metasail_races_data.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+    <list default="true" id="42f7e6f5-7490-4c53-b60c-c87ffe38ac5e" name="Changes" comment="Data cleaning final et processing a finir">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Data_cleaning_metasail.py" beforeDir="false" afterPath="$PROJECT_DIR$/Data_cleaning_metasail.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data_metasail_FinalIQFOIL_Brest.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Data_processing.py" beforeDir="false" afterPath="$PROJECT_DIR$/Data_processing.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Datascraping_metasail.py" beforeDir="false" afterPath="$PROJECT_DIR$/Datascraping_metasail.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Fetch_wind_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/Fetch_wind_data.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Metasail_Statistics_ML_test.xlsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Metasail_Statistics_ML_test_cleaned.xlsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Metasail_Statistics_ML_test_processed.xlsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Test.py" beforeDir="false" afterPath="$PROJECT_DIR$/Test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/journal de bord.txt" beforeDir="false" afterPath="$PROJECT_DIR$/journal de bord.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -52,22 +54,23 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Python.Data_cleaning_metasail.executor": "Run",
-    "Python.Data_processing.executor": "Run",
-    "Python.Fetch_wind_data.executor": "Run",
-    "Python.Gestion_valeurs_aberrantes.executor": "Run",
-    "Python.Test.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "ignore.virus.scanning.warn.message": "true",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python.Data_cleaning_metasail.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Data_processing.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Datascraping_metasail.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Fetch_wind_data.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Gestion_valeurs_aberrantes.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Test.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;my-new-branch&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\Byron Barette\PycharmProjects\Projet_machine_learning_performance_voile" />
@@ -96,7 +99,23 @@
       <option name="project" value="LOCAL" />
       <updated>1755960897058</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Data cleaning final et processing a finir">
+      <option name="closed" value="true" />
+      <created>1756928058306</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1756928058306</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Data cleaning final et processing a finir">
+      <option name="closed" value="true" />
+      <created>1756928083498</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1756928083498</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -118,6 +137,8 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="clean avec fuzzy bug" />
-    <option name="LAST_COMMIT_MESSAGE" value="clean avec fuzzy bug" />
+    <MESSAGE value="Webscraper final" />
+    <MESSAGE value="Data cleaning final et processing a finir" />
+    <option name="LAST_COMMIT_MESSAGE" value="Data cleaning final et processing a finir" />
   </component>
 </project>
