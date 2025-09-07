@@ -136,7 +136,7 @@ Ce script a été écrit pour les compétitions d'IQFOIL jeunes, mais peut être
 
 ### Comment modifier l'outil ? (développeurs)
 
-1. Si l'on connait les noms des compétitions que l'on veut scraper sur Metasail (ex : toutes les dernières éditions de "ILCA Senior Europeans"), il est possible de contourner la sélection manuelle SingleFile par l'emploi d'une CLI (https://github.com/gildas-lormeau/single-file-cli) associé à une fonction d'identification d'expressions régulières. Si au contraire, l'objectif est de scrape l'ensemble des compétitions indépendamment du support de course, la CLI Singlefile est aussi recommandée. 
+1. Si l'on connait les noms des compétitions que l'on veut scraper sur Metasail (ex : toutes les dernières éditions de "ILCA Senior Europeans"), il est possible de contourner la sélection manuelle SingleFile par l'emploi d'une CLI (https://github.com/gildas-lormeau/single-file-cli) associée à une fonction d'identification d'expressions régulières. Si au contraire, l'objectif est de scrape l'ensemble des compétitions indépendamment du support de course, la CLI Singlefile est aussi recommandée. 
 
 2. Ajoutez des calculs de métriques de le script data processing
 
