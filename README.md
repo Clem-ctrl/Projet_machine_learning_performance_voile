@@ -5,18 +5,18 @@ Ce projet est un exemple d'exploration statistique mobilisant des données de na
 
 **Plusieurs étapes jalonnent ce projet :**
 
-Automatisation de la collecte de données (web scraping) :
+**Automatisation de la collecte de données (web scraping)** :
 - Extraction des informations structurées à partir de pages web, en utilisant un outil comme Selenium pour interagir avec le site web et récupérer le contenu.
 - Analyse du contenu récupéré, qu'il soit au format XML ou autre, pour en extraire les informations pertinentes et les organiser dans un tableau de données (DataFrame).
 - Mise en place d'un flux de travail itératif pour traiter des centaines d'URLs et gestion des données déjà collectées afin d'éviter la redondance.
 - Récupération de données météo via API (OpenWeatherMaps).
 
-Intégration et enrichissement les ensembles de données :
+**Intégration et enrichissement les ensembles de données** :
 - Fusion plusieurs ensembles de données basés sur des critères communs (association de données météorologiques aux données de course).
 - Développement d'une logique pour trouver et fusion les données les plus pertinentes (par exemple, trouver les données météo dont le timestamp est le plus proche de l'événement de course).
 - Création de nouvelles variables ou métriques dérivées à partir des données existantes (par exemple, le speed to wind ratio ou l'angle Vent-Cap de la bouée).
 
-Modélisation et Analyse Prédictive :
+**Modélisation et Analyse Prédictive** :
 - Utilisation de techniques d'encodage spécifiques (circulaire, one-hot) pour transformer les données brutes en variables exploitables.
 - Mise en œuvre d'une recherche par grille (Grid Search) pour l'optimisation des hyperparamètres. 
 - Intégration d'un système de checkpoint pour l'efficacité des calculs.
