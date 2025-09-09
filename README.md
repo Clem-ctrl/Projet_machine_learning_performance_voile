@@ -205,6 +205,5 @@ Explorez la relation entre la vitesse du vent, les allures de navigation et la p
 </p>
 
 <div align="center">
-  [Cliquez ici pour ouvrir la visualisation interactive](visualisations/visualisation_dynamique_vitesse_vent_et_allure_esthetique.html)
 </div>
 
