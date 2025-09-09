@@ -266,7 +266,7 @@ Erreur Quadratique Moyenne (MSE) : 8.28
 
 Coefficient de Détermination (R²) : 0.68
 
-Les prédictions du modèle s'écartent des valeurs réelles de VMC d'environ 2.01 noeuds, ce qui est très satisfaisant notamment compte tenu de la simplicité des hyperparamètres du modèle. La MSE permet de calculer la RMSE, qui indique que les prédictions du modèle s'écartent des valeurs réelles d'environ 2.88 nœuds en moyenne. Enfin, le modèle explique 68 % de la variance des données ce qui est un bon début mais qui serait largement perfectible avec l'ajout d'autres variables telles que les réglages du Foil, les performances passées des coureurs ou encore la stratégie de course. 
+Les prédictions du modèle s'écartent des valeurs réelles de VMC d'environ 2.01 noeuds, ce qui est très satisfaisant notamment compte tenu de la simplicité des hyperparamètres du modèle. La MSE permet de calculer la RMSE, qui indique que les prédictions du modèle s'écartent des valeurs réelles d'environ 2.88 nœuds en moyenne. Enfin, le modèle explique 68 % de la variance des données ce qui est performant à très performant. Il pourrait cependant être amélioré avec l'ajout de variables complémentaires telles que les réglages du Foil, les performances passées des coureurs ou encore la stratégie de course. 
 
 ## **Analyse du Graphique**
 <img width="1200" height="800" alt="Figure_VMC_prediction" src="https://github.com/user-attachments/assets/f938a67e-b291-4fb1-b335-ea3f843dff51" />
