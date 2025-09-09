@@ -258,20 +258,31 @@ Afin de garantir la robustesse et la performance du modèle, j'ai mis en œuvre 
 
     bootstrap : La méthode d'échantillonnage (True, False).
 
-3. Évaluation de la performance du modèle
+3. Résultats  de la performance du modèle
 
-Après l'entraînement, la performance du modèle final a été rigoureusement évaluée sur un jeu de données de test indépendant. Les métriques de performance utilisées sont :
+ Meilleurs hyperparamètres trouvés : {'bootstrap': True, 'max_depth': 20, 'max_features': 'sqrt', 'min_samples_leaf': 2, 'min_samples_split': 10, 'n_estimators': 100}
+✅  Métriques d'évaluation du meilleur modèle :
+Erreur Absolue Moyenne (MAE) : 2.01
+Erreur Quadratique Moyenne (MSE) : 8.28
+Coefficient de Détermination (R²) : 0.68
 
-    Mean Absolute Error (MAE)
-
-    Mean Squared Error (MSE)
-
-    Coefficient de Détermination (R²)
-
-L'analyse de l'importance des variables, une des forces des algorithmes de type Random Forest, a également été réalisée pour identifier les facteurs les plus influents dans la prédiction de la VMC. 
-
+Importance des variables pour la prédiction de 'VMC du segment (noeuds)':
+Allure_Vent debout                 0.242579
+Longueur totale du parcours (m)    0.183537
+Classement entrée de segment       0.101078
+Allure_Reaching                    0.096722
+Humidity (%)                       0.078402
+Wind Speed (kts)                   0.073492
+Temperature (°C)                   0.061241
+Pressure (hPa)                     0.039830
+Allure_Allures remontantes         0.038490
+Allure_Allures portantes           0.034117
+Allure_Vent arrière                0.019631
+Sexe_Men                           0.018730
+Sexe_Women                         0.012151
 
 ## **Analyse Globale du Graphique**
+<img width="1200" height="800" alt="Figure_VMC_prediction" src="https://github.com/user-attachments/assets/f938a67e-b291-4fb1-b335-ea3f843dff51" />
 
 Ce diagramme à barres horizontales illustre l'**importance relative** de chaque variable (ou "feature") utilisée par le modèle pour effectuer ses prédictions.
 
@@ -282,73 +293,56 @@ En résumé, ce graphique vous montre le **classement des facteurs les plus dét
 
 ---
 
-## **Interprétation Détaillée des Variables Principales**
-
-Les variables en haut du graphique sont les plus prédictives.
-
-1.  **Classement entrée de segment** : C'est de loin la variable la plus importante, avec un score d'environ 0.55.
-    * **Signification** : La position d'un concurrent au début d'un segment est le meilleur prédicteur de sa VMC sur ce même segment.
-    * **Hypothèse** : Les concurrents déjà bien classés ont probablement une meilleure vitesse, une meilleure tactique, ou naviguent dans des conditions de vent plus favorables (air "propre"), ce qui leur permet de maintenir une VMC élevée.
-
-2.  **Wind Speed (kts)** : La vitesse du vent est le deuxième facteur le plus influent (score ≈ 0.17).
-    * **Signification** : Cela confirme une évidence en voile : la vitesse du vent est un moteur fondamental de la performance.
-    * **Hypothèse** : Une augmentation de la vitesse du vent conduit généralement à une augmentation de la VMC, jusqu'à un certain seuil où le bateau devient plus difficile à contrôler.
-
-3.  **Temperature (°C)** et **Humidity (%)** : Ces deux variables météorologiques ont une importance notable et similaire (score ≈ 0.10).
-    * **Signification** : Elles influencent la densité de l'air. Un air plus dense (plus froid et plus sec) exerce une poussée plus forte sur les voiles, ce qui peut améliorer la performance.
-    * **Hypothèse** : Le modèle a appris que ces variations subtiles de la densité de l'air ont un impact quantifiable sur la VMC.
-
-4.  **Orientation vent metasail (sin/cos)** : Ces deux composantes, qui représentent l'angle du vent, ont une importance modérée.
-    * **Signification** : La direction du vent est cruciale pour déterminer l'allure du bateau et donc sa VMC potentielle. Le modèle utilise ces deux variables pour reconstruire l'angle du vent.
+Voici une analyse détaillée du nouveau graphique fourni, en suivant la structure que vous avez demandée.
 
 ---
 
-## **Analyse des Variables Moins Influentes**
+### **Interprétation Détaillée des Variables Principales**
 
-Les variables situées en bas du graphique ont un impact très faible sur les prédictions du modèle.
+Les variables en haut du graphique sont celles que le modèle a jugées les plus décisives pour prédire la VMC (Velocity Made Course).
 
-* **Les Allures (Reaching, Portantes, etc.)** : Il est surprenant que les allures spécifiques aient une si faible importance.
-    * **Hypothèse possible** : L'information de l'allure pourrait être déjà implicitement contenue dans la combinaison de la vitesse du vent (`Wind Speed`) et de son orientation (`Orientation vent metasail`). Le modèle pourrait donc considérer ces variables comme redondantes.
+1.  **Allure_Vent debout** : C'est, de loin, la variable la plus influente (score ≈ 0.24).
+    * **Signification** : Le fait de naviguer au près serré (contre le vent) est le facteur le plus déterminant pour la VMC. C'est une allure où la performance est la plus difficile à atteindre et la plus variable d'un concurrent à l'autre.
+    * **Hypothèse** : Une VMC élevée au vent debout est un marqueur de grande technicité et de bon réglage. Le modèle a donc appris que savoir si un segment est au "Vent debout" est une information cruciale pour prédire la vitesse de progression vers la bouée.
 
-* **Sexe (Men/Women)** et **Catégorie d'âge (U17/U19)** : Ces caractéristiques démographiques semblent avoir une influence quasi nulle selon le modèle.
-    * **Signification** : Pour ce jeu de données, les performances (VMC) ne semblent pas dépendre du genre ou de la catégorie d'âge des navigateurs, une fois que les autres facteurs (classement, météo) sont pris en compte.
+2.  **Longueur totale du parcours (m)** : Cette variable a une importance très élevée (score ≈ 0.18).
+    * **Signification** : La distance totale de la course influence la VMC sur un segment donné.
+    * **Hypothèse** : Cela pourrait s'expliquer par la gestion de l'effort et la stratégie. Sur un parcours long, les navigateurs pourraient gérer leur rythme différemment que sur un sprint. La fatigue ou la stratégie à long terme peut donc impacter la VMC d'un segment intermédiaire.
+
+3.  **Classement entrée de segment** : Ce facteur reste un prédicteur très fort (score ≈ 0.11).
+    * **Signification** : Comme dans l'analyse précédente, la position d'un bateau au début d'un segment est un excellent indicateur de sa performance future sur ce même segment.
+    * **Hypothèse** : Les leaders naviguent souvent dans un vent "propre" (non perturbé par les autres bateaux) et ont démontré une vitesse ou une tactique supérieure, qu'ils tendent à maintenir. Les leaders auront certainement une VMC légèrement supérieure dûe à leur niveau de navigation général et sur la course en particulier. 
+
+4.  **Allure_Reaching** : Le reaching (vent de travers) est également très important (score ≈ 0.10).
+    * **Signification** : Le reaching est généralement l'allure la plus rapide pour un voilier.
+    * **Hypothèse** : Sans surprise, le modèle est affecté par l'angle entre l'axe du vent et celui de la bouée à atteindre. Il identifie cette allure comme un indicateur clé d'une VMC potentiellement élevée. Sa présence dans un segment est un fort signal positif pour la prédiction.
+
+5.  **Variables Météorologiques (Humidity, Wind Speed, Temperature, Pressure)** : Ce groupe de variables a une importance modérée mais significative (scores entre 0.04 et 0.08).
+    * **Signification** : Les conditions atmosphériques de base (humidité, vitesse du vent, température, pression) influencent directement la puissance que le support peut tirer du vent.
+    * **Hypothèse** : La vitesse du vent (`Wind Speed`) est le moteur, tandis que la température, l'humidité et la pression (`Temperature`, `Humidity`, `Pressure`) affectent la densité de l'air, et donc l'efficacité des voiles. Le modèle les utilise conjointement pour affiner sa prédiction de la performance brute.
 
 ---
 
-## **Synthèse et 'Interprétation**
+### **Analyse des Variables Moins Influentes**
 
-### **Template de Rapport d'Analyse d'Importance des Variables**
+Ces variables, situées en bas du graphique, ont un impact plus faible sur les prédictions du modèle mais ne sont pas nécessairement inutiles.
 
-**Titre :** Analyse de l'Importance des Variables pour la Prédiction de la VMC
+* **Autres Allures (remontantes, portantes, Vent arrière)** : Ces allures ont une importance moindre que le "Vent debout" ou le "Reaching".
+    * **Hypothèse** : Elles représentent peut-être des conditions de performance moins extrêmes. Leur impact sur la VMC est moins discriminant que celui des allures où la technique (vent debout) ou la vitesse pure (reaching) sont primordiales.
 
-**1. Introduction**
-Ce document présente l'analyse de l'importance des variables issues d'un modèle de régression Random Forest. L'objectif du modèle est de prédire la `VMC du segment (noeuds)`. Le graphique ci-dessous classe les variables en fonction de leur contribution à la performance prédictive du modèle.
+* **Sexe (Men/Women)** : Ces deux variables ont la plus faible importance.
+    * **Signification** : Une fois que toutes les autres variables (allure, classement, météo) sont prises en compte, le genre du navigateur n'est pas un facteur prédictif de la VMC selon ce modèle. La performance s'explique par les conditions et les compétences techniques, pas par le sexe.
 
-**2. Analyse des Facteurs Prédictifs Majeurs**
-Le modèle identifie clairement deux catégories principales de facteurs influents : la performance relative et les conditions météorologiques.
+---
 
-* **Facteur de Performance Dominant :**
-    * La variable **`Classement entrée de segment`** est, de manière écrasante, la plus influente (score : [insérer le score, ex: ~0.55]). Cela indique que la performance passée (le classement) est le meilleur indicateur de la performance immédiate. Les leaders tendent à maintenir leur avantage.
+### **Synthèse et Template d'Interprétation**
 
-* **Facteurs Météorologiques Clés :**
-    * La **`Wind Speed (kts)`** (score : [~0.17]) est le deuxième facteur le plus important, ce qui est cohérent avec les principes fondamentaux de la navigation à voile.
-    * La **`Temperature (°C)`** et l'**`Humidity (%)`** (scores : [~0.10]) jouent également un rôle significatif, probablement en influençant la densité de l'air et donc l'efficacité de la propulsion vélique.
+#### **Synthèse**
 
-**3. Analyse des Facteurs d'Influence Secondaire**
-Certaines variables, bien que moins critiques, contribuent tout de même au modèle :
-
-* L'**`Orientation vent metasail`** (via ses composantes sinus et cosinus) est modérément importante, soulignant le rôle de l'angle du vent dans la détermination de la VMC.
-
-**4. Variables à Faible Impact**
-Il est notable que plusieurs variables ont une importance prédictive très faible dans ce modèle :
-
-* Les différentes **allures spécifiques** (`Allure_Reaching`, `Allure_Portantes`, etc.) ont un score quasi nul. Cela suggère que leur information est redondante par rapport à d'autres variables plus importantes comme l'angle et la vitesse du vent.
-* Les caractéristiques démographiques comme le **`Sexe`** et la **`Catégorie d'âge`** n'apparaissent pas comme des différenciateurs de performance significatifs dans ce contexte.
+L'analyse de ce modèle révèle que la prédiction de la VMC repose sur une hiérarchie claire de facteurs. La **nature de l'allure**, en particulier les allures extrêmes comme le **vent debout** (très technique) et le **reaching** (très rapide), est le facteur le plus déterminant. Le **contexte de la course** (`Longueur totale du parcours`) et la **dynamique de performance** (`Classement entrée de segment`) sont également des prédicteurs de premier plan. Enfin, les **conditions météorologiques** forment un socle d'informations de fond essentiel pour affiner la prédiction. Les facteurs démographiques, quant à eux, semblent moins primordiaux dans la prédiction.
 
 **5. Conclusion et Recommandations**
-L'analyse révèle que pour prédire la VMC, le modèle s'appuie principalement sur le **classement actuel du concurrent et les conditions météorologiques** (vitesse du vent, température, humidité).
+Pour prédire la VMC, le modèle s'appuie principalement sur **l'allure du segment, le contexte global de la course et le classement actuel du bateau**. Les conditions météorologiques sont utilisées pour moduler la prédiction.
 
-* **Recommandation Opérationnelle :** Pour améliorer la performance, l'accent doit être mis sur les stratégies permettant de gagner et de conserver un bon classement (tactique, départs).
-* **Recommandation pour le Modèle :** Étant donné la faible importance de certaines variables, une simplification du modèle en retirant les caractéristiques les moins pertinentes pourrait être envisagée pour réduire la complexité et potentiellement améliorer la généralisation, bien que les modèles de type "forêt" soient robustes à ce genre de situation.
-
-
+* **Recommandation Stratégique :** La VMC a une corrélation linéaire avec le classement de fin de segment. Ainsi les variables impactant cette métrique seraient à considérer comme prioritaires pour l'entrainement. D'après les résultats du modèle, l'entraînement et la stratégie devraient se concentrer en priorité sur l'amélioration de la performance dans les allures les plus techniques (vent debout) et l'exploitation maximale des allures rapides (reaching) plutot que les allures intermédiaires. 
+* **Recommandation pour le Modèle :** Le modèle semble robuste et cohérent avec l'expertise du domaine. La forte importance de la `Longueur totale du parcours` pourrait faire l'objet d'une analyse plus approfondie pour comprendre les effets de la fatigue ou de la stratégie à long terme.
