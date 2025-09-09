@@ -212,8 +212,6 @@ Explorez la relation entre la vitesse du vent, les allures de navigation et la p
 
 Ce modèle de régression est entraîné pour prédire la Velocity Made Course (VMC) du segment (noeuds). Il s'agit de la Vitesse Maximale au Cap, une métrique qui représente la vitesse de progression vers la bouée.
 
-Absolument. Voici une version plus professionnelle et structurée, conçue pour une présentation à un recruteur, en utilisant un langage plus formel et technique.
-
 Modélisation de la Vitesse Maximale au Cap (VMC) avec un Random Forest Regressor
 
 
