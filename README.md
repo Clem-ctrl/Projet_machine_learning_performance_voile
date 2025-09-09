@@ -196,14 +196,7 @@ Pour être en conformité, vous devez notamment :
 
 Explorez la relation entre la vitesse du vent, les allures de navigation et la performance des athlètes grâce à notre graphique interactif.
 
-<br>
-
-<p align="center">
-  <a href="./visualisations/visualisation_dynamique_vitesse_vent_et_allure_esthetique.html" target="_blank">
-    <img src="https://via.placeholder.com/600x300.png?text=Cliquez+ici+pour+la+visualisation+interactive" alt="Bouton de visualisation interactive">
-  </a>
-</p>
-
-<div align="center">
-</div>
+<a href="Visualisations/visualisation_dynamique_vitesse_vent_et_allure_esthetique.html" target="_blank">
+  <img src="https://via.placeholder.com/600x300.png?text=Cliquez+ici+pour+la+visualisation+interactive" alt="Bouton de visualisation interactive">
+</a>
 
