@@ -1,235 +1,238 @@
 import pandas as pd
 import numpy as np
-from datetime import timedelta, datetime
+import warnings
+from pandas.errors import SettingWithCopyWarning
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.ensemble import RandomForestRegressor
+import matplotlib.pyplot as plt
+import pickle
+import os
+import time
+from datetime import datetime
 
-# Configuration des fichiers
-FICHIER_METASAIL = "Metasail_Statistics_ML_test_cleaned.xlsx"
-FICHIER_WEATHER = "weather_data_cleaned.xlsx"
-FICHIER_SORTIE = "Metasail_Statistics_ML_test_processed.xlsx"
+# --- 1. Chemin du fichier et gestion des avertissements ---
+file_path = r"C:\Projects\Projet_machine_learning_performance_voile\Metasail_Statistics_unified_processed.xlsx"
+output_path = r"C:\Projects\Projet_machine_learning_performance_voile\Metasail_random_forest.xlsx"
+warnings.filterwarnings('ignore', category=SettingWithCopyWarning)
 
+print("✅ Étape 1 : Chargement et préparation des données...\n")
 
-class DataProcessor:
-    """
-    Une classe pour calculer des métriques complexes à partir de données nettoyées.
-    Elle intègre des données de deux sources différentes.
-    """
+# --- 2. Chargement et vérification des données ---
+try:
+    df_metasail = pd.read_excel(file_path)
+    print("✅ Fichier Excel chargé avec succès.")
+except FileNotFoundError:
+    print(f"❌ Erreur : Le fichier n'a pas été trouvé. Veuillez vérifier le chemin d'accès : {file_path}")
+    exit()
 
-    def __init__(self, df_metasail, df_weather):
-        """
-        Initialise le DataProcessor avec les DataFrames de Metasail et de météo.
-        :param df_metasail: DataFrame pandas des données de Metasail.
-        :param df_weather: DataFrame pandas des données météo.
-        """
-        self.df_metasail = df_metasail
-        self.df_weather = df_weather
-        if self.df_metasail is None or self.df_metasail.empty:
-            print("❌ Le DataFrame Metasail est vide. Les calculs ne peuvent pas être effectués.")
-        if self.df_weather is None or self.df_weather.empty:
-            print("❌ Le DataFrame météo est vide. Les calculs de vent et de courant ne peuvent pas être effectués.")
+print("🔍 Noms des colonnes dans le fichier Excel :")
+print(df_metasail.columns.tolist())
 
-    def _prepare_data_for_merge(self):
-        """
-        Prépare les DataFrames pour la fusion.
-        Crée une clé de jointure combinant la date, le lieu et l'heure.
-        """
-        print("\n" + "=" * 50)
-        print("🛠️ PRÉPARATION DES DONNÉES POUR LA FUSION")
-        print("=" * 50)
+# Définition des colonnes
+target_col = 'Classement sur le segment'
+feature_cols = [
+    'Efficacité du segment (%)', 'Sexe', "Catégorie d'âge",
+    'Wind Speed (kts)', 'Orientation vent metasail',
+    'Vitesse moyenne du segment (noeuds)', 'VMC du segment (noeuds)',
+    'Allure', 'Wind to speed ratio',
+    'Temperature (°C)', 'Pressure (hPa)', 'Humidity (%)', 'Rain (mm)',
+    'Classement entrée de segment', 'Classement fin de segment'
+]
 
-        # Création de la colonne de date pour les deux DataFrames
-        self.df_metasail["Date"] = pd.to_datetime(
-            self.df_metasail[["Année", "Mois", "Jour"]].astype(str).agg("-".join, axis=1), errors="coerce"
-        ).dt.date
-        self.df_weather["Date"] = pd.to_datetime(
-            self.df_weather[["Year", "Month", "Day"]].astype(str).agg("-".join, axis=1), errors="coerce"
-        ).dt.date
+# Vérification de l'existence des colonnes
+colonnes_existantes = [col for col in feature_cols + [target_col] if col in df_metasail.columns]
+colonnes_manquantes = [col for col in feature_cols + [target_col] if col not in df_metasail.columns]
 
-        # Traitement des heures pour trouver le timestamp de l'heure centrale
-        self.df_metasail["Début du segment_dt"] = pd.to_datetime(
-            self.df_metasail["Début du segment (timestamp)"], format="%H:%M:%S", errors="coerce"
-        )
-        self.df_metasail["Fin du segment_dt"] = pd.to_datetime(
-            self.df_metasail["Fin du segment (timestamp)"], format="%H:%M:%S", errors="coerce"
-        )
-        self.df_metasail["Temps du segment_dt"] = self.df_metasail.apply(
-            lambda row: (
-                    row["Début du segment_dt"] + (row["Fin du segment_dt"] - row["Début du segment_dt"]) / 2).time()
-            if pd.notna(row["Début du segment_dt"]) and pd.notna(row["Fin du segment_dt"]) and row[
-                "Début du segment_dt"] <= row["Fin du segment_dt"]
-            else (row["Début du segment_dt"] + timedelta(days=1) + (
-                    row["Fin du segment_dt"] - row["Début du segment_dt"] + timedelta(
-                days=1)) / 2).time() if pd.notna(row["Début du segment_dt"]) and pd.notna(row["Fin du segment_dt"])
-            else np.nan,
-            axis=1
-        )
-#calcule l'heure centrale du segment et l'associe à la ligne du DataFrame df_metasail
+if colonnes_manquantes:
+    print(
+        f"\n❌ Erreur : Les colonnes suivantes sont manquantes et le script ne peut pas continuer : {colonnes_manquantes}")
+    exit()
 
-        self.df_weather["Time_dt"] = pd.to_datetime(self.df_weather["Time"], format="%H:%M:%S", errors="coerce").dt.time
+data = df_metasail[colonnes_existantes].copy()
 
-        print("✅ Données de date et heure préparées.")
+# Remplacement des virgules par des points et conversion en numérique
+cols_to_convert = [
+    'Wind Speed (kts)', 'Vitesse moyenne du segment (noeuds)',
+    'VMC du segment (noeuds)', 'Wind to speed ratio', 'Temperature (°C)',
+    'Pressure (hPa)', 'Humidity (%)', 'Rain (mm)', 'Efficacité du segment (%)',
+    'Classement entrée de segment', 'Classement fin de segment', 'Classement sur le segment'
+]
+cols_to_convert_existantes = [col for col in cols_to_convert if col in data.columns]
 
-    def _find_closest_weather_data(self):
-        """
-        Recherche et fusionne les données météo les plus proches pour chaque ligne de Metasail.
-        """
-        print("\n" + "=" * 50)
-        print("🔍 RECHERCHE ET FUSION DES DONNÉES MÉTÉO LES PLUS PROCHES")
-        print("=" * 50)
+for col in cols_to_convert_existantes:
+    data[col] = data[col].astype(str).str.replace(',', '.', regex=False).astype(float)
 
-        # Initialisation des colonnes de données météo
-        self.df_metasail["Wind Speed (kts)"] = np.nan
-        self.df_metasail["Wind Direction (deg)"] = np.nan
+print("✅ Préparation des données terminée.")
 
-        # Set pour stocker les lieux déjà signalés comme manquants
-        ignored_locations = set()
+# --- 3. Nettoyage et encodage des données ---
+print("⚙️ Étape 3 : Nettoyage et encodage des données...\n")
 
-        # Itération sur chaque ligne du DataFrame Metasail
-        for index, row_metasail in self.df_metasail.iterrows():
-            if pd.isna(row_metasail["Date"]) or pd.isna(row_metasail["Temps du segment_dt"]):
-                continue
-
-            lieu = row_metasail["Lieu de l'événement"].lower()
-            date = row_metasail["Date"]
-
-            # Correction de la syntaxe pour le filtrage
-            filtered_weather = self.df_weather[
-                (self.df_weather["Date"] == date) &
-                (self.df_weather["City"].str.lower() == lieu)
-                ].copy()
-
-            if filtered_weather.empty:
-                # Vérifie si le lieu a déjà été signalé pour cette exécution
-                if lieu not in ignored_locations:
-                    print(
-                        f"⚠️ Aucune donnée météo trouvée pour le lieu {row_metasail['Lieu de l\'événement']} le {date}. Les lignes de cette zone seront ignorées.")
-                    ignored_locations.add(lieu)
-                continue
-
-            # Calcule la différence de temps et trouve la ligne la plus proche
-            filtered_weather["time_diff"] = filtered_weather["Time_dt"].apply(
-                lambda x: abs(datetime.combine(datetime.min.date(), x) - datetime.combine(datetime.min.date(),
-                                                                                          row_metasail[
-                                                                                              "Temps du segment_dt"]))
-            )
-            closest_weather_index = filtered_weather["time_diff"].idxmin()
-            closest_weather = filtered_weather.loc[closest_weather_index]
-
-            # Mise à jour des colonnes dans le DataFrame original
-            self.df_metasail.at[index, "Wind Speed (kts)"] = closest_weather["Wind Speed (kts)"]
-            self.df_metasail.at[index, "Wind Direction (deg)"] = closest_weather["Wind Direction (deg)"]
-
-        print("✅ Fusion des données météo terminée.")
-
-    def recalculer_et_nettoyer_metriques(self):
-        """
-        Recalcule le temps de segment, la VMC moyenne et la vitesse moyenne.
-        """
-        if self.df_metasail is None:
-            return
-
-        print("\n" + "=" * 50)
-        print("🔧 RECALCUL DES MÉTRIQUES DE PERFORMANCE DU SEGMENT")
-        print("=" * 50)
-
-        required_cols = ["Début du segment (timestamp)", "Fin du segment (timestamp)",
-                         "Distance réelle du segment (m)", "Longueur du côté du segment (m)"]
-        if not all(col in self.df_metasail.columns for col in required_cols):
-            print("❌ Colonnes requises pour le recalcule manquantes.")
-            return
-
-        # Correction : utilisation des colonnes déjà créées pour le calcul
-        self.df_metasail["delta_time"] = self.df_metasail["Fin du segment_dt"] - self.df_metasail["Début du segment_dt"]
-        self.df_metasail.loc[self.df_metasail["delta_time"] < timedelta(0), "delta_time"] += timedelta(days=1)
-        self.df_metasail["Temps du segment (s)"] = self.df_metasail["delta_time"].dt.total_seconds()
-        print("✅ 'Temps du segment (s)' recalculé avec succès.")
-
-        safe_time = self.df_metasail["Temps du segment (s)"].replace(0, np.nan)
-        self.df_metasail["Vitesse moyenne (noeuds)"] = (self.df_metasail[
-                                                            "Distance réelle du segment (m)"] / safe_time) * 1.94384
-        print("✅ 'Vitesse moyenne (noeuds)' recalculée avec succès.")
-
-        self.df_metasail["VMC moyenne"] = (self.df_metasail["Longueur du côté du segment (m)"] / safe_time) * 1.94384
-        print("✅ 'VMC moyenne' recalculée avec succès.")
-
-        # Suppression des colonnes existantes de métriques pour éviter les doublons
-        cols_to_drop = ["Vitesse maximale (noeuds)", "VMG maximale", "VMC maximale", "VMG moyenne"]
-        self.df_metasail.drop(columns=cols_to_drop, inplace=True, errors="ignore")
-
-    def calculate_new_metrics(self):
-        """
-        Calcule les nouvelles métriques d'efficacité par rapport au vent en utilisant le cap entre les bouées.
-        """
-        print("\n" + "=" * 50)
-        print("📈 CALCUL DES NOUVELLES MÉTRIQUES LIÉES AU VENT")
-        print("=" * 50)
-
-        # Vérification des colonnes nécessaires
-        required_cols = ["Efficacité du segment (%)", "Wind Speed (kts)", "Cap magnétique", "Wind Direction (deg)"]
-        if not all(col in self.df_metasail.columns for col in required_cols):
-            print(
-                f"❌ Colonnes requises pour le calcul des nouvelles métriques manquantes : {list(set(required_cols) - set(self.df_metasail.columns))}")
-            return
-
-        # Efficacité (Distance réelle/idéale) (%) / wind speed
-        self.df_metasail["Efficacité segment / Wind Speed"] = self.df_metasail["Efficacité du segment (%)"] / \
-                                                              self.df_metasail["Wind Speed (kts)"]
-        print("✅ 'Efficacité segment / Wind Speed' calculé avec succès.")
-
-        # Calculer la différence d'angle entre le vent et le cap du segment
-        # Un angle de 0° ou 360° signifie que la bouée est directement au vent.
-        # Un angle de 180° signifie que la bouée est directement sous le vent.
-        self.df_metasail["Angle Vent-Cap"] = np.abs(
-            self.df_metasail["Cap magnétique"] - self.df_metasail["Wind Direction (deg)"])
-        self.df_metasail["Angle Vent-Cap"] = self.df_metasail["Angle Vent-Cap"].apply(lambda x: min(x, 360 - x))
-
-        # Définition des conditions de navigation (près ou portant)
-        # Un segment est au "près" si l'angle entre le vent et le cap du segment est inférieur à 90 degrés.
-        # Un segment est au "portant" si cet angle est supérieur ou égal à 90 degrés.
-        pres_condition = (self.df_metasail["Angle Vent-Cap"] < 90)
-        portant_condition = (self.df_metasail["Angle Vent-Cap"] >= 90)
-
-        # Efficacité (Distance réelle/idéale) (%) au près
-        self.df_metasail["Efficacité Près (%)"] = np.nan
-        self.df_metasail.loc[pres_condition, "Efficacité Près (%)"] = self.df_metasail.loc[
-            pres_condition, "Efficacité du segment (%)"]
-        print("✅ 'Efficacité Près (%)' calculé avec succès.")
-
-        # Efficacité (Distance réelle/idéale) (%) au portant
-        self.df_metasail["Efficacité Portant (%)"] = np.nan
-        self.df_metasail.loc[portant_condition, "Efficacité Portant (%)"] = self.df_metasail.loc[
-            portant_condition, "Efficacité du segment (%)"]
-        print("✅ 'Efficacité Portant (%)' calculé avec succès.")
-
-def main():
-    """ Fonction principale pour exécuter le traitement des données. """
-    try:
-        # Chargez les deux fichiers
-        dataframe_metasail = pd.read_excel(FICHIER_METASAIL)
-        dataframe_weather = pd.read_excel(FICHIER_WEATHER)
-        print("✅ Fichiers chargés avec succès.")
-
-        # Étape 1 : Traitement et calcul des métriques
-        processeur = DataProcessor(dataframe_metasail, dataframe_weather)
-
-        # Prépare et fusionne les données météo
-        processeur._prepare_data_for_merge()
-        processeur._find_closest_weather_data()
-
-        # Recalcule les métriques de performance
-        processeur.recalculer_et_nettoyer_metriques()
-
-        # Calcule les nouvelles métriques d'efficacité au vent
-        processeur.calculate_new_metrics()
-
-        # Sauvegarde du fichier final
-        processeur.df_metasail.to_excel(FICHIER_SORTIE, index=False)
-        print(f"💾 Fichier traité et calculé sauvegardé avec succès sous : {FICHIER_SORTIE}")
-
-    except FileNotFoundError as e:
-        print(f"❌ Erreur : L'un des fichiers requis n'a pas été trouvé. {e}")
-    except Exception as e:
-        print(f"❌ Une erreur inattendue est survenue : {e}")
+# Conservation des données U17 et U19
+if "Catégorie d'âge" in data.columns:
+    data = data[data['Catégorie d\'âge'].isin(['U17', 'U19'])]
 
 
-if __name__ == "__main__":
-    main()
+# Encodage circulaire pour l'orientation du vent
+def circular_encoding(df, col):
+    """Effectue un encodage circulaire pour une colonne d'angle."""
+    if col in df.columns:
+        angle_rad = np.radians(df[col])
+        df[f'{col}_sin'] = np.sin(angle_rad)
+        df[f'{col}_cos'] = np.cos(angle_rad)
+        df.drop([col], axis=1, inplace=True)
+    return df
+
+
+data = circular_encoding(data, 'Orientation vent metasail')
+
+# Encodage des variables catégorielles (One-Hot Encoding)
+categorical_cols = ['Sexe', 'Catégorie d\'âge', 'Allure']
+categorical_cols_existantes = [col for col in categorical_cols if col in data.columns]
+data = pd.get_dummies(data, columns=categorical_cols_existantes, dtype=int)
+
+# Suppression des valeurs manquantes
+data.dropna(inplace=True)
+
+print("✅ Données nettoyées et encodées avec succès.")
+print(f"Nombre total de lignes après nettoyage : {data.shape[0]}")
+print(f"Variables finales : {data.columns.tolist()}\n")
+
+# --- 4. Division des données et entraînement du modèle ---
+print("\n🧠 Étape 4 : Division des données et entraînement du modèle...\n")
+
+X = data.drop(columns=[target_col])
+y = data[target_col]
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=13)
+print("✅ Données divisées avec succès (80% entraînement, 20% test).")
+print(f"Taille de l'ensemble d'entraînement : {X_train.shape[0]} lignes")
+print(f"Taille de l'ensemble de test : {X_test.shape[0]} lignes\n")
+
+# --- 5. Recherche des meilleurs hyperparamètres (Grid Search) ---
+print("\n⚙️ Étape 5 : Recherche des meilleurs hyperparamètres (Grid Search)...\n")
+CHECKPOINT_PATH = "grid_search_checkpoint.pkl"
+
+if os.path.exists(CHECKPOINT_PATH):
+    print("✅ Checkpoint trouvé. Chargement de l'objet GridSearch...")
+    with open(CHECKPOINT_PATH, 'rb') as f:
+        grid_search = pickle.load(f)
+    print("✅ GridSearch chargé avec succès.")
+    total_training_time = 0.0  # Temps non disponible
+else:
+    print("❌ Aucun checkpoint trouvé. Lancement de GridSearch...")
+    start_time = time.time()
+
+    # Nouvelle grille de paramètres
+    param_grid = {
+        'n_estimators': [100, 200, 300],
+        'max_depth': [10, 20, 30],
+        'min_samples_split': [2, 5, 10],
+        'min_samples_leaf': [1, 2, 4]
+    }
+
+    model_to_use = RandomForestRegressor(random_state=13)
+
+    grid_search = GridSearchCV(
+        estimator=model_to_use,
+        param_grid=param_grid,
+        cv=3,
+        n_jobs=-1,
+        verbose=2
+    )
+
+    grid_search.fit(X_train, y_train)
+
+    total_training_time = time.time() - start_time
+    with open(CHECKPOINT_PATH, 'wb') as f:
+        pickle.dump(grid_search, f)
+    print("\n✅ Checkpoint GridSearch sauvegardé.")
+    print(f"⏳ Temps d'entraînement total : {total_training_time:.2f} secondes.")
+
+print(f"\n✅ Meilleurs hyperparamètres trouvés : {grid_search.best_params_}")
+print(f"✅ Meilleur score R² sur l'ensemble d'entraînement : {grid_search.best_score_:.2f}")
+
+best_model = grid_search.best_estimator_
+
+MODEL_PATH = "best_random_forest_model.pkl"
+with open(MODEL_PATH, 'wb') as f:
+    pickle.dump(best_model, f)
+print(f"✅ Le meilleur modèle a été sauvegardé sous : {MODEL_PATH}")
+print("\n✅ Le meilleur modèle a été sélectionné pour les prédictions finales.")
+
+# --- 6. Prédictions et évaluation du meilleur modèle ---
+print("\n📈 Étape 6 : Prédictions et évaluation du meilleur modèle...\n")
+y_pred = best_model.predict(X_test)
+mae = mean_absolute_error(y_test, y_pred)
+mse = mean_squared_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+print("✅ Métriques d'évaluation du meilleur modèle :")
+print(f"Erreur Absolue Moyenne (MAE) : {mae:.2f}")
+print(f"Erreur Quadratique Moyenne (MSE) : {mse:.2f}")
+print(f"Coefficient de Détermination (R²) : {r2:.2f}")
+
+# --- 7. Analyse de l'importance des variables ---
+print("\n🔍 Étape 7 : Analyse de l'importance des variables...\n")
+feature_importances = pd.Series(best_model.feature_importances_, index=X.columns)
+sorted_importances = feature_importances.sort_values(ascending=False)
+print("Importance des variables pour la prédiction du 'Classement sur le segment':")
+print(sorted_importances)
+
+# --- 8. Visualisation de l'importance des variables ---
+print("\n📊 Étape 8 : Création du graphique d'importance des variables...\n")
+plt.figure(figsize=(12, 8))
+sorted_importances.plot(kind='barh', color='skyblue')
+plt.title("Importance des variables pour la prédiction du classement sur le segment")
+plt.xlabel("Importance (score)")
+plt.ylabel("Variables")
+plt.gca().invert_yaxis()
+plt.tight_layout()
+plt.show()
+print("\n✅ Graphique d'importance des variables généré avec succès.")
+
+# --- 9. Sauvegarde des résultats dans un fichier Excel ---
+print("\n📝 Étape 9 : Sauvegarde des résultats dans un fichier Excel...\n")
+
+# Création du nom de la feuille de calcul
+now = datetime.now()
+sheet_name_train = now.strftime("%Y-%m-%d_%H-%M-%S")
+sheet_name_test = "Resultats_Test"
+
+# Création du DataFrame pour les résultats d'entraînement et d'importance
+results_df = pd.DataFrame(columns=['Nom', 'Valeur'])
+results_df = pd.concat([results_df, pd.DataFrame([
+    {'Nom': 'Meilleurs hyperparamètres', 'Valeur': str(grid_search.best_params_)},
+    {'Nom': 'Meilleur score R²', 'Valeur': grid_search.best_score_},
+    {'Nom': 'Temps d\'entraînement (s)', 'Valeur': total_training_time},
+])], ignore_index=True)
+
+# Ajout de l'importance des variables
+importance_df = pd.DataFrame(sorted_importances).reset_index()
+importance_df.columns = ['Variable', 'Importance']
+
+# Création du DataFrame pour les résultats du test
+test_results_df = pd.DataFrame(columns=['Métrique', 'Valeur'])
+test_results_df = pd.concat([test_results_df, pd.DataFrame([
+    {'Métrique': 'Erreur Absolue Moyenne (MAE)', 'Valeur': mae},
+    {'Métrique': 'Erreur Quadratique Moyenne (MSE)', 'Valeur': mse},
+    {'Métrique': 'Coefficient de Détermination (R²)', 'Valeur': r2},
+])], ignore_index=True)
+
+# Utilisation de l'API pd.ExcelWriter pour écrire sur plusieurs feuilles
+with pd.ExcelWriter(output_path, engine='openpyxl') as writer:
+    # Écriture des données d'entraînement et d'importance
+    data.to_excel(writer, sheet_name=sheet_name_train, index=False)
+
+    # Écriture des résultats d'entraînement en dessous des données
+    startrow_results = len(data) + 2
+    results_df.to_excel(writer, sheet_name=sheet_name_train, startrow=startrow_results, index=False)
+
+    # Écriture de l'importance des variables
+    startrow_importance = startrow_results + len(results_df) + 2
+    importance_df.to_excel(writer, sheet_name=sheet_name_train, startrow=startrow_importance, index=False)
+
+    # Écriture des résultats de test sur une nouvelle feuille
+    test_results_df.to_excel(writer, sheet_name=sheet_name_test, index=False)
+
+print(f"✅ Résultats et données d'entraînement sauvegardés dans '{output_path}'.")
+print("\n🏁 Processus terminé avec succès.")
