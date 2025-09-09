@@ -357,7 +357,7 @@ L'analyse de ce modèle révèle que la prédiction de la VMC repose sur une hi�
 
 **5. Conclusion et Recommandations**
 
-Prédire la VMC d'un coureur peut s'avérer utile pour anticiper les contraintes mécaniques s'exerçant sur son matériel, ainsi que les contraintes biomécaniques s'exerçant sur lui. Ainsi, sur le long terme, l'anticipation de cette métrique permet d'optimiser ses réglages et sa stratégie de course en fonction des variables énoncées, mais aussi en fonction des sensations du coureur avant la course.  
+Prédire la VMC d'un coureur peut s'avérer utile pour anticiper les contraintes mécaniques s'exerçant sur son matériel, ainsi que les contraintes biomécaniques s'exerçant sur lui. Ainsi, sur le long terme, l'anticipation de cette métrique permettrait d'optimiser les réglages et la stratégie de course en fonction des variables énoncées, mais aussi en fonction des sensations du coureur avant la course.  
 
 * **Recommandation Stratégique :** La VMC a une corrélation linéaire avec le classement de fin de segment. Ainsi les variables impactant cette métrique seraient à considérer comme prioritaires pour l'entrainement. D'après les résultats du modèle, l'entraînement et la stratégie devraient se concentrer en priorité sur l'amélioration de la performance dans les allures les plus techniques (vent debout) et l'exploitation maximale des allures rapides (reaching) plutot que les allures intermédiaires. 
 * **Recommandation pour le Modèle :** Le modèle semble robuste et cohérent avec l'expertise du domaine. La forte importance de la `Longueur totale du parcours` pourrait faire l'objet d'une analyse plus approfondie pour comprendre les effets de la fatigue ou de la stratégie à long terme.
