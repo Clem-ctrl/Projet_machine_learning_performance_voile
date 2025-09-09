@@ -192,9 +192,7 @@ Pour être en conformité, vous devez notamment :
 
 </details>  
 
-### Visualisation interactive 📈
 
-Explorez la relation entre la vitesse du vent, les allures de navigation et la performance des athlètes grâce à notre graphique interactif.
 ### Visualisation interactive 📈
 
 Explorez la relation entre la vitesse du vent, les allures de navigation et la performance des athlètes grâce à notre graphique interactif.
