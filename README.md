@@ -15,10 +15,9 @@ Ce projet est un exemple d'exploration statistique mobilisant des données de na
 </details>
 
 <details>
-  <summary> <b> Intégration et enrichissement les ensembles de données </b> </summary>
+  <summary> <b> Intégration et enrichissement des ensembles de données </b> </summary>
   
-  - Fusion plusieurs ensembles de données basés sur des critères communs (association de données météorologiques aux données de course).
-  - Développement d'une logique pour trouver et fusion les données les plus pertinentes (par exemple, trouver les données météo dont le timestamp est le plus proche de l'événement de course).
+  - Fusion de plusieurs ensembles de données basés sur des critères communs (association de données météorologiques aux données de course).
   - Création de nouvelles variables ou métriques dérivées à partir des données existantes (par exemple, le speed to wind ratio ou l'angle Vent-Cap de la bouée).
 </details>
 
