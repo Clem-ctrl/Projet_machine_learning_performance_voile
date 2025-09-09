@@ -192,6 +192,8 @@ Pour être en conformité, vous devez notamment :
 
 </details>  
 
+## Illustrations de l'exploration de données 
+
 
 ### Visualisation interactive 📈
 
@@ -202,3 +204,8 @@ Explorez la relation entre la vitesse du vent, les allures de navigation et la p
     <img src="https://via.placeholder.com/600x300.png?text=Bouton+de+visualisation+interactive" alt="Bouton de visualisation interactive">
   </a>
 </div>
+
+
+### Entraînement de modèle
+
+
