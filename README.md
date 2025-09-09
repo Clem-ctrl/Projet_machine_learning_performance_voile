@@ -353,7 +353,7 @@ Ces variables, situées en bas du graphique, ont un impact plus faible sur les p
 
 L'analyse de ce modèle révèle que la prédiction de la VMC repose sur une hiérarchie claire de facteurs. La **nature de l'allure**, en particulier les allures extrêmes comme le **vent debout** (très technique) et le **reaching** (très rapide), est le facteur le plus déterminant. Le **contexte de la course** (`Longueur totale du parcours`) et la **dynamique de performance** (`Classement entrée de segment`) sont également des prédicteurs de premier plan. Enfin, les **conditions météorologiques** forment un socle d'informations de fond essentiel pour affiner la prédiction. Les facteurs démographiques, quant à eux, semblent moins primordiaux dans la prédiction.
 
-**5. Conclusion et Recommandations**
+**Conclusion et Recommandations**
 
 Prédire la VMC d'un coureur peut s'avérer utile pour anticiper les contraintes mécaniques s'exerçant sur son matériel, ainsi que les contraintes biomécaniques s'exerçant sur lui. Ainsi, sur le long terme, l'anticipation de cette métrique permettrait d'optimiser les réglages et la stratégie de course en fonction des variables énoncées, mais aussi en fonction des sensations du coureur avant la course.  
 
