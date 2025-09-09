@@ -1,6 +1,6 @@
 # Modélisation de la performance en IQFoil jeunes à partir de données de navigation et de conditions météo.
 
-## ETL fonctionnel basé sur le webscraping Metasail et Openweathermaps aboutissant sur une régression Random Forest explorer les enjeux de course en IQFOIL.
+## ETL fonctionnel basé sur le webscraping Metasail et Openweathermaps aboutissant sur une régression Random Forest pour explorer les enjeux de course en IQFOIL.
 Ce projet est un exemple d'exploration statistique mobilisant des données de navigation et de conditions météorologiques publiques et en libre accès. 
 
 **Plusieurs étapes jalonnent ce projet :**
