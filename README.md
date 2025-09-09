@@ -1,60 +1,72 @@
-# Modélisation de la performance en IQFoil jeunes à partir dde données de navigation et de conditions météo. 
+# Modélisation de la performance en IQFoil jeunes à partir de données de navigation et de conditions météo.
 
-## ETL fonctionnel basé sur le webscraping Metasail aboutissant sur une régression Random Forest pour modéliser et explorer les enjeux en IQFOIL et tenter de prédire le classement d'un coureur sur un segment de course.
+## ETL fonctionnel basé sur le webscraping Metasail et Openweathermaps aboutissant sur une régression Random Forest explorer les enjeux de course en IQFOIL.
 Ce projet est un exemple d'exploration statistique mobilisant des données de navigation et de conditions météorologiques publiques et en libre accès. 
 
 **Plusieurs étapes jalonnent ce projet :**
 
-**Automatisation de la collecte de données (web scraping)** :
-- Extraction des informations structurées à partir de pages web, en utilisant un outil comme Selenium pour interagir avec le site web et récupérer le contenu.
-- Analyse du contenu récupéré, qu'il soit au format XML ou autre, pour en extraire les informations pertinentes et les organiser dans un tableau de données (DataFrame).
-- Mise en place d'un flux de travail itératif pour traiter des centaines d'URLs et gestion des données déjà collectées afin d'éviter la redondance.
-- Récupération de données météo via API (OpenWeatherMaps).
+<details>
+  <summary> <b> Automatisation de la collecte de données (web scraping) </b> </summary>
+  
+  - Extraction des informations structurées à partir de pages web, en utilisant un outil comme Selenium pour interagir avec le site web et récupérer le contenu.
+  - Analyse du contenu récupéré, qu'il soit au format XML ou autre, pour en extraire les informations pertinentes et les organiser dans un tableau de données (DataFrame).
+  - Mise en place d'un flux de travail itératif pour traiter des centaines d'URLs et gestion des données déjà collectées afin d'éviter la redondance.
+  - Récupération de données météo via API (OpenWeatherMaps).
+</details>
 
-**Intégration et enrichissement les ensembles de données** :
-- Fusion plusieurs ensembles de données basés sur des critères communs (association de données météorologiques aux données de course).
-- Développement d'une logique pour trouver et fusion les données les plus pertinentes (par exemple, trouver les données météo dont le timestamp est le plus proche de l'événement de course).
-- Création de nouvelles variables ou métriques dérivées à partir des données existantes (par exemple, le speed to wind ratio ou l'angle Vent-Cap de la bouée).
+<details>
+  <summary> <b> Intégration et enrichissement les ensembles de données </b> </summary>
+  
+  - Fusion plusieurs ensembles de données basés sur des critères communs (association de données météorologiques aux données de course).
+  - Développement d'une logique pour trouver et fusion les données les plus pertinentes (par exemple, trouver les données météo dont le timestamp est le plus proche de l'événement de course).
+  - Création de nouvelles variables ou métriques dérivées à partir des données existantes (par exemple, le speed to wind ratio ou l'angle Vent-Cap de la bouée).
+</details>
 
-**Modélisation et Analyse Prédictive** :
-- Utilisation de techniques d'encodage spécifiques (circulaire, one-hot) pour transformer les données brutes en variables exploitables.
-- Mise en œuvre d'une recherche par grille (Grid Search) pour l'optimisation des hyperparamètres. 
-- Intégration d'un système de checkpoint pour l'efficacité des calculs.
-- Évaluation des performances du modèle à l'aide de métriques clés (MAE, MSE, R²). 
-- Analyse de l'importance des variables qui influencent les prédictions
-
-
+<details>
+  <summary> <b> Modélisation et Analyse Prédictive </b> </summary>
+  
+  - Utilisation de techniques d'encodage spécifiques (circulaire, one-hot) pour transformer les données brutes en variables exploitables.
+  - Mise en œuvre d'une recherche par grille (Grid Search) pour l'optimisation des hyperparamètres.
+  - Intégration d'un système de checkpoint pour l'efficacité des calculs.
+  - Évaluation des performances du modèle à l'aide de métriques clés (MAE, MSE, R²).
+  - Analyse de l'importance des variables qui influencent les prédictions
+</details>
 
 ## Diagrammes de flux de données 
-<table style="width:100%; border:none;">
-  <thead>
-    <tr style="border:none;">
-      <th style="text-align:center; padding:10px; border:none;">DDF - Data scraping Metasail</th>
-      <th style="text-align:center; padding:10px; border:none;">DDF - Appel API Openweathermap (météo)</th>
-      <th style="text-align:center; padding:10px; border:none;">DDF - Data cleaning & fusion</th>
-      <th style="text-align:center; padding:10px; border:none;">DDF - Data processing</th>
-      <th style="text-align:center; padding:10px; border:none;">DDF - Entraînement modèle RFR</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr style="border:none;">
-      <td style="text-align:center; padding:0; border:none;">
-        <img src="https://github.com/user-attachments/assets/2f210fcd-6d46-4aef-99ed-07d5a9ded3da" width="250" alt="DDF_scraping" />
-      </td>
-      <td style="text-align:center; padding:0; border:none;">
-        <img src="https://github.com/user-attachments/assets/1e773618-b806-47cc-bfed-78eabd4022f9" width="250" alt="DDF_API_Openweathermap" />
-      </td>
-      <td style="text-align:center; padding:0; border:none;">
-        <img src="https://github.com/user-attachments/assets/2b526e0d-2757-4970-8eab-8769e2153bfc" width="250" alt="DDF_cleaning" />
-      </td>
-      <td style="text-align:center; padding:0; border:none;">
-        <img src="https://github.com/user-attachments/assets/654d2b7d-ffd4-4c18-9f80-f490cb8f8a5c" width="250" alt="DDF_RFR" />
-      </td>
-      <td style="text-align:center; padding:0; border:none;">
-        <img src="https://github.com/user-attachments/assets/19ee963b-d696-42ff-8a70-87a66bbe42e0" width="250" alt="DDF_Processing" />
-      </td>
-    </tr>
-  </tbody>
+<br>
+<br><table style="width:100%; border:none;">
+<thead>
+<tr style="border:none;">
+<th style="text-align:center; padding:10px; border:none;">DDF - Data scraping Metasail</th>
+<th style="text-align:center; padding:10px; border:none;">DDF - Appel API Openweathermap (météo)</th>
+<th style="text-align:center; padding:10px; border:none;">DDF - Data cleaning & fusion</th>
+<th style="text-align:center; padding:10px; border:none;">DDF - Data processing</th>
+<th style="text-align:center; padding:10px; border:none;">DDF - Entraînement modèle RFR</th>
+<th style="text-align:center; padding:10px; border:none;">DDF - Exemple de visualisation</th>
+</tr>
+</thead>
+<tbody>
+<tr style="border:none;">
+<td style="text-align:center; padding:0; border:none;">
+<img src="https://github.com/user-attachments/assets/2f210fcd-6d46-4aef-99ed-07d5a9ded3da" width="250" alt="DDF_scraping" />
+</td>
+<td style="text-align:center; padding:0; border:none;">
+<img src="https://github.com/user-attachments/assets/1e773618-b806-47cc-bfed-78eabd4022f9" width="250" alt="DDF_API_Openweathermap" />
+</td>
+<td style="text-align:center; padding:0; border:none;">
+<img src="https://github.com/user-attachments/assets/2b526e0d-2757-4970-8eab-8769e2153bfc" width="250" alt="DDF_cleaning" />
+</td>
+<td style="text-align:center; padding:0; border:none;">
+<img src="https://github.com/user-attachments/assets/19ee963b-d696-42ff-8a70-87a66bbe42e0" width="250" alt="DDF_Processing" />
+</td>
+<td style="text-align:center; padding:0; border:none;">
+<img src="https://github.com/user-attachments/assets/654d2b7d-ffd4-4c18-9f80-f490cb8f8a5c" width="250" alt="DDF_RFR" />
+</td>
+<td style="text-align:center; padding:0; border:none;">
+<img src="https://github.com/user-attachments/assets/2bebdd13-4459-423a-9fd4-74e4672573e8" width="250" alt="DDF-visualisations" />
+</td>
+</tr>
+</tbody>
 </table>
 
 ### Comment utiliser cet outil ?
@@ -70,10 +82,12 @@ Ce script a été écrit pour les compétitions d'IQFOIL jeunes, mais peut être
    
 6. Sur le CSV de sortie, insérer les coordonnées GPS du lieu de navigation dans la colonne dédiée puis lancez le script d'appel à l'API météo.
 
-7. Lancez le script de cleaning, puis celui de processing et enfin celui d'entraînement du modèle.
+7. Lancez le script de cleaning, puis celui de processing et enfin celui d'entraînement du modèle et de visualisation.
 
 ### Variables à disposition
-
+<details>
+  <summary>Cliquez ici pour voir la liste des variables disponibles</summary>
+  
 **Variables d'identification et caractéristiques de la course & du segment** :
 - City, Latitude, Longitude : Informations géographiques détaillées.
 - ID_course : Identifiant unique de la course.
@@ -133,16 +147,22 @@ Ce script a été écrit pour les compétitions d'IQFOIL jeunes, mais peut être
 - VMG maximale : Vitesse en direction du vent maximale atteinte.
 - VMC maximale : Vitesse en direction du vent maximale atteinte.
 - Ratio de performance : Speed to wind ratio.
+</details>
 
-### Comment modifier l'outil ? (développeurs)
+<details>
+  <summary> <b> ### Comment modifier l'outil ? (développeurs & chercheurs) </b> </summary>
 
-1. Si l'on connait les noms des compétitions que l'on veut scraper sur Metasail (ex : toutes les dernières éditions de "ILCA Senior Europeans"), il est possible de contourner la sélection manuelle SingleFile par l'emploi d'une CLI (https://github.com/gildas-lormeau/single-file-cli) associée à une fonction d'identification d'expressions régulières. Si au contraire, l'objectif est de scrape l'ensemble des compétitions indépendamment du support de course, la CLI Singlefile est aussi recommandée. 
-
-2. Ajoutez des calculs de métriques de le script data processing
-
-3. Modifiez les hyperparamètres dans le script d'entraînement du modèle RFR
+1. Une fois les éléments des scripts personnalisés, orchestrez les Runs de scripts via un fichier Main.
    
-### Difficultés connues (work in progress...)
+3. Si l'on connait les noms des compétitions que l'on veut scraper sur Metasail (ex : toutes les dernières éditions de "ILCA Senior Europeans"), il est possible de contourner la sélection manuelle SingleFile par l'emploi d'une CLI (https://github.com/gildas-lormeau/single-file-cli) associée à une fonction d'identification d'expressions régulières. Si au contraire, l'objectif est de scrape l'ensemble des compétitions indépendamment du support de course, la CLI Singlefile est aussi recommandée. 
+
+4. Ajoutez des calculs de métriques de le script data processing
+
+5. Modifiez les hyperparamètres dans le script d'entraînement du modèle RFR
+</details>
+
+<details>
+  <summary> <b> ### Difficultés connues (work in progress...) </b> </summary>
 
 1. Il y a parfois contradiction entre les relevés de conditions météorologiques Metasail et OpenweatherMap, certainement dûe à la localisation des capteurs employés par chaque site. 
 Metasail ne fournit que l'orientation de vent en libre accès. Le projet se base donc sur l'orientation de vent fournie par Metasail et la force de vent fournie par OpenWeatherMaps. 
@@ -152,9 +172,10 @@ Metasail ne fournit que l'orientation de vent en libre accès. Le projet se base
 3. Metasail ne présente pas les catégories d'âge de manière standardisée, ainsi, si le script est optimisé pour récupérer les données U19 et U17, des erreurs de catégorisation peuvent se produire pour les catégories Senior et plus jeunes (ex: U13).
 
 4. Pour les mêmes raisons, si l'on veut étudier un support spécifique toujours vérifier le support utilisé lors de la course car certaines compétitions mêlent plusieurs supports en fonction des courses.
-
-### Avertissement et Responsabilité (RGPD) 
-
+</details>
+  
+<details>  
+  <summary> <b> ### Avertissement et Responsabilité (RGPD) </b> </summary>
 
 Ce script est un outil d'extraction de données ("scraping") conçu pour collecter des informations publiquement accessibles sur la plateforme Metasail. Il est important de comprendre que ces données, même si elles sont en libre accès, peuvent inclure des informations à caractère personnel (nom, classement, performance, etc.).
 
@@ -169,5 +190,21 @@ Pour être en conformité, vous devez notamment :
 - Minimiser les données : Ne collectez que les données strictement nécessaires à votre projet. N'extrayez pas plus d'informations que ce dont vous avez réellement besoin.
 - Sécuriser les données : Vous devez prendre des mesures techniques et organisationnelles pour garantir la sécurité des données collectées et éviter toute fuite ou utilisation abusive.
 
+</details>  
 
+### Visualisation interactive 📈
+
+Explorez la relation entre la vitesse du vent, les allures de navigation et la performance des athlètes grâce à notre graphique interactif.
+
+<br>
+
+<p align="center">
+  <a href="./visualisations/visualisation_dynamique_vitesse_vent_et_allure_esthetique.html" target="_blank">
+    <img src="https://via.placeholder.com/600x300.png?text=Cliquez+ici+pour+la+visualisation+interactive" alt="Bouton de visualisation interactive">
+  </a>
+</p>
+
+<div align="center">
+  [Cliquez ici pour ouvrir la visualisation interactive](visualisations/visualisation_dynamique_vitesse_vent_et_allure_esthetique.html)
+</div>
 
