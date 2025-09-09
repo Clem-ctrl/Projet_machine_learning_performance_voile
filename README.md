@@ -260,9 +260,10 @@ Afin de garantir la robustesse et la performance du modèle, j'ai mis en œuvre 
 
 3. Résultats  de la performance du modèle
 
- Meilleurs hyperparamètres trouvés : {'bootstrap': True, 'max_depth': 20, 'max_features': 'sqrt', 'min_samples_leaf': 2, 'min_samples_split': 10, 'n_estimators': 100}
+**Meilleurs hyperparamètres trouvés :** 
+{'bootstrap': True, 'max_depth': 20, 'max_features': 'sqrt', 'min_samples_leaf': 2, 'min_samples_split': 10, 'n_estimators': 100}
  
-✅  Métriques d'évaluation du meilleur modèle :
+✅  **Métriques d'évaluation du meilleur modèle :**
 
 Erreur Absolue Moyenne (MAE) : 2.01
 
@@ -270,8 +271,19 @@ Erreur Quadratique Moyenne (MSE) : 8.28
 
 Coefficient de Détermination (R²) : 0.68
 
+Les prédictions du modèle s'écartent des valeurs réelles de VMC d'environ 2.01 noeuds, ce qui est très satisfaisant notamment compte tenu de la simplicité des hyperparamètres du modèle. La MSE permet de calculer la RMSE, qui indique que les prédictions du modèle s'écartent des valeurs réelles d'environ 2.88 nœuds en moyenne. Enfin, le modèle explique 68 % de la variance des données ce qui est un bon début mais qui serait largement perfectible avec l'ajout d'autres variables telles que les réglages du Foil, les performances passées des coureurs ou encore la stratégie de course. 
 
-Importance des variables pour la prédiction de 'VMC du segment (noeuds)':
+## **Analyse du Graphique**
+<img width="1200" height="800" alt="Figure_VMC_prediction" src="https://github.com/user-attachments/assets/f938a67e-b291-4fb1-b335-ea3f843dff51" />
+
+Ce diagramme à barres horizontales illustre l'**importance relative** de chaque variable (ou "feature") utilisée par le modèle pour effectuer ses prédictions.
+
+* **Axe Y (Variables)** : Liste toutes les variables prises en compte par le modèle, des plus importantes (en haut) aux moins importantes (en bas).
+* **Axe X (Importance - score)** : Représente le score d'importance. 
+
+En résumé, ce graphique vous montre le **classement des facteurs les plus déterminants** pour prédire la performance (VMC) d'un segment de navigation.
+
+**Importance des variables pour la prédiction de 'VMC du segment (noeuds):**
 
 Allure_Vent debout                 0.242579
 
@@ -299,20 +311,6 @@ Sexe_Men                           0.018730
 
 Sexe_Women                         0.012151
 
-
-## **Analyse du Graphique**
-<img width="1200" height="800" alt="Figure_VMC_prediction" src="https://github.com/user-attachments/assets/f938a67e-b291-4fb1-b335-ea3f843dff51" />
-
-Ce diagramme à barres horizontales illustre l'**importance relative** de chaque variable (ou "feature") utilisée par le modèle pour effectuer ses prédictions.
-
-* **Axe Y (Variables)** : Liste toutes les variables prises en compte par le modèle, des plus importantes (en haut) aux moins importantes (en bas).
-* **Axe X (Importance - score)** : Représente le score d'importance. 
-
-En résumé, ce graphique vous montre le **classement des facteurs les plus déterminants** pour prédire la performance (VMC) d'un segment de navigation.
-
----
-
-Voici une analyse détaillée du nouveau graphique fourni, en suivant la structure que vous avez demandée.
 
 ---
 
