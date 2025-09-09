@@ -32,58 +32,11 @@ USER_AGENTS = [
 ]
 MIN_DELAY_SECONDS = 20
 MAX_DELAY_SECONDS = 45
-MAX_RETRIES = 5  # Nombre de tentatives maximales
-
-# --- Configuration du répertoire de profil persistant pour Selenium ---
-PERSISTENT_DATA_DIR = os.path.join(os.path.expanduser('~'), 'selenium_chrome_profile')
-if not os.path.exists(PERSISTENT_DATA_DIR):
-    os.makedirs(PERSISTENT_DATA_DIR)
-    print(f"Création du répertoire de profil persistant : {PERSISTENT_DATA_DIR}")
-
-
-# -----------------------------------------------------------
-# Fonction pour gérer l'extraction d'URLs des fichiers locaux
-
-def find_urls_from_local_files(directory_path):
-    """
-    Recherche les fichiers HTML locaux et extrait les URLs Metasail qui y sont contenues.
-    """
-    print("Étape 1 : Recherche des URLs dans les fichiers locaux... 🔍")
-    search_pattern = os.path.join(directory_path, "MetaSail for web*.html")
-    html_files = glob.glob(search_pattern)
-    urls = []
-    url_regex = re.compile(r'https://app\.metasail\.it/ViewRecordedRace2018\.aspx\?idgara=\d+&amp;token=\w+')
-
-    if not html_files:
-        print(f"    -> ❌ Aucun fichier correspondant à '{search_pattern}' n'a été trouvé.")
-        return []
-
-    print(f"    -> ✅ Fichiers trouvés : {len(html_files)}")
-    for file_path in html_files:
-        filename = os.path.basename(file_path)
-        try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                content = f.read()
-                found_urls = [url.replace('&amp;', '&') for url in url_regex.findall(content)]
-                if found_urls:
-                    urls.extend(found_urls)
-                    print(f"      -> ✅ Trouvé {len(found_urls)} URL(s) dans '{filename}'")
-        except Exception as e:
-            print(f"      -> ❌ Erreur lors de la lecture du fichier {filename}: {e}", file=sys.stderr)
-
-    unique_urls = sorted(list(set(urls)))
-    if unique_urls:
-        print(f"    -> ✅ Total d'URLs uniques trouvées : {len(unique_urls)}")
-    else:
-        print("    -> ❌ Aucune URL de course valide n'a été trouvée dans les fichiers locaux.")
-
-    return unique_urls
 
 
 # -----------------------------------------------------------
 class MetasailScraper:
     """Classe pour encapsuler la logique de scraping d'une URL Metasail."""
-
     def __init__(self, event_url, event_id, token, source_name, session):
         self.event_url = event_url
         self.stats_url = None
@@ -97,7 +50,7 @@ class MetasailScraper:
             'Seriale': 'Numéro de série', 'Nome': 'Nom complet',
             'TotTempPerc': 'Temps total parcouru (s)', 'TotLungLato': 'Longueur totale du parcours (m)',
             'TotDistPerc': 'Distance totale réelle parcourue (m)', 'PosPartenza': 'Position de départ',
-            'TotDistRealeSuIdeale': 'Efficacité (Distance réelle/idéale) (%)', 'SegNum': 'Numéro de segment',
+            'TotDistRealeSuIdeale': 'Efficacité totale (Distance réelle/idéale) (%)', 'SegNum': 'Numéro de segment',
             'TopSpeed': 'Vitesse maximale (noeuds)', 'TopVMG': 'VMG maximale', 'TopVMC': 'VMC maximale',
             'AvgVMG': 'VMG moyenne', 'AvgVMC': 'VMC moyenne', 'AvgSpeed': 'Vitesse moyenne (noeuds)',
             'CrtRaceSegSX': 'Bâbord (%)', 'CrtRaceSegDX': 'Tribord (%)',
@@ -269,7 +222,7 @@ class MetasailScraper:
             namespace = '{http://meteda.it/}'
             print("    -> 🔎 Début de l'extraction des données des coureurs et segments.")
             for racer_data in root.findall(f'.//{namespace}StatisticheDato'):
-                racer_info = {'ID': self.source_name, 'Nom de l\'événement': self.event_name,
+                racer_info = {'ID_course': self.source_name, 'Nom de l\'événement': self.event_name,
                               'Lieu de l\'événement': self.event_location, 'Course': self.race_name,
                               'Date de la course': self.race_date,
                               'Orientation vent metasail': self.wind_orientation_metasail}
@@ -303,7 +256,7 @@ class MetasailScraper:
                 print("    -> ❌ Aucune donnée à transformer en DataFrame.")
                 return None
             df = pd.DataFrame(data_rows)
-            first_cols = ['ID', 'Nom de l\'événement', 'Lieu de l\'événement', 'Course', 'Date de la course',
+            first_cols = ['ID_course', 'Nom de l\'événement', 'Lieu de l\'événement', 'Course', 'Date de la course',
                           'Orientation vent metasail', 'Nom complet', self.translations['Seriale']]
             other_cols = [col for col in df.columns if col not in first_cols]
             df = df.reindex(columns=first_cols + other_cols)
@@ -358,6 +311,52 @@ class MetasailScraper:
         else:
             print("    -> ❌ Échec de l'exportation : Le DataFrame est vide.")
             return False
+MAX_RETRIES = 5  # Nombre de tentatives maximales
+
+# --- Configuration du répertoire de profil persistant pour Selenium ---
+PERSISTENT_DATA_DIR = os.path.join(os.path.expanduser('~'), 'selenium_chrome_profile')
+if not os.path.exists(PERSISTENT_DATA_DIR):
+    os.makedirs(PERSISTENT_DATA_DIR)
+    print(f"Création du répertoire de profil persistant : {PERSISTENT_DATA_DIR}")
+
+
+# -----------------------------------------------------------
+# Fonction pour gérer l'extraction d'URLs des fichiers locaux
+
+def find_urls_from_local_files(directory_path):
+    """
+    Recherche les fichiers HTML locaux et extrait les URLs Metasail qui y sont contenues.
+    """
+    print("Étape 1 : Recherche des URLs dans les fichiers locaux... 🔍")
+    search_pattern = os.path.join(directory_path, "MetaSail for web*.html")
+    html_files = glob.glob(search_pattern)
+    urls = []
+    url_regex = re.compile(r'https://app\.metasail\.it/ViewRecordedRace2018\.aspx\?idgara=\d+&amp;token=\w+')
+
+    if not html_files:
+        print(f"    -> ❌ Aucun fichier correspondant à '{search_pattern}' n'a été trouvé.")
+        return []
+
+    print(f"    -> ✅ Fichiers trouvés : {len(html_files)}")
+    for file_path in html_files:
+        filename = os.path.basename(file_path)
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+                found_urls = [url.replace('&amp;', '&') for url in url_regex.findall(content)]
+                if found_urls:
+                    urls.extend(found_urls)
+                    print(f"      -> ✅ Trouvé {len(found_urls)} URL(s) dans '{filename}'")
+        except Exception as e:
+            print(f"      -> ❌ Erreur lors de la lecture du fichier {filename}: {e}", file=sys.stderr)
+
+    unique_urls = sorted(list(set(urls)))
+    if unique_urls:
+        print(f"    -> ✅ Total d'URLs uniques trouvées : {len(unique_urls)}")
+    else:
+        print("    -> ❌ Aucune URL de course valide n'a été trouvée dans les fichiers locaux.")
+
+    return unique_urls
 
 
 # ====================================================================
@@ -400,12 +399,12 @@ if __name__ == "__main__":
                 try:
                     print(f"    -> 🔎 Lecture du fichier '{OUTPUT_FILENAME}'...")
                     df_existing = pd.read_excel(OUTPUT_FILENAME, sheet_name='Sheet1')
-                    if 'ID' in df_existing.columns:
-                        processed_files = set(df_existing['ID'].dropna().unique())
+                    if 'ID_course' in df_existing.columns:
+                        processed_files = set(df_existing['ID_course'].dropna().unique())
                         print(f"    -> ✅ {len(processed_files)} fichier(s) déjà traité(s) trouvé(s).")
                     else:
                         print(
-                            "    -> ⚠️ Avertissement : La colonne 'ID' est absente. Impossible de vérifier les doublons.")
+                            "    -> ⚠️ Avertissement : La colonne 'ID_course' est absente. Impossible de vérifier les doublons.")
                 except Exception as e:
                     print(f"    -> ❌ Avertissement : Impossible de lire le fichier existant. {e}")
 
