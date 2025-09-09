@@ -201,10 +201,6 @@ Explorez la relation entre la vitesse du vent, les allures de navigation et la p
 
 <div align="center">
   <a href="https://raw.githubusercontent.com/Clem-ctrl/Projet_machine_learning_performance_voile/main/Visualisations/visualisation_dynamique_vitesse_vent_et_allure_esthetique.html" download>
-    <img src="https://via.placeholder.com/600x300.png?text=Téléchargez+la+visualisation" alt="Bouton de téléchargement de la visualisation">
-  </a>
-  <br>
-  <a href="https://raw.githubusercontent.com/Clem-ctrl/Projet_machine_learning_performance_voile/refs/heads/main/Visualisations/visualisation_dynamique_vitesse_vent_et_allure_esthetique.html" download>
-    Télécharger le graphique interactif (5,13 Mo)
+    <img src="https://via.placeholder.com/600x300.png?text=Bouton+de+visualisation+interactive" alt="Bouton de visualisation interactive">
   </a>
 </div>
