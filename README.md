@@ -195,8 +195,17 @@ Pour être en conformité, vous devez notamment :
 ### Visualisation interactive 📈
 
 Explorez la relation entre la vitesse du vent, les allures de navigation et la performance des athlètes grâce à notre graphique interactif.
+### Visualisation interactive 📈
 
-<a href="Visualisations/visualisation_dynamique_vitesse_vent_et_allure_esthetique.html" target="_blank">
-  <img src="https://via.placeholder.com/600x300.png?text=Cliquez+ici+pour+la+visualisation+interactive" alt="Bouton de visualisation interactive">
-</a>
+Explorez la relation entre la vitesse du vent, les allures de navigation et la performance des athlètes grâce à notre graphique interactif.
 
+<br>
+
+<div align="center">
+  <a href="https://raw.githubusercontent.com/Clem-ctrl/Projet_machine_learning_performance_voile/main/Visualisations/visualisation_dynamique_vitesse_vent_et_allure_esthetique.html" target="_blank">
+    <img src="https://via.placeholder.com/600x300.png?text=Cliquez+ici+pour+la+visualisation+interactive" alt="Bouton de visualisation interactive">
+  </a>
+  <br>
+  <br>
+  [Ouvrir la visualisation interactive](https://raw.githubusercontent.com/Clem-ctrl/Projet_machine_learning_performance_voile/main/Visualisations/visualisation_dynamique_vitesse_vent_et_allure_esthetique.html)
+</div>
