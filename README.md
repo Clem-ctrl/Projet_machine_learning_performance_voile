@@ -206,6 +206,149 @@ Explorez la relation entre la vitesse du vent, les allures de navigation et la p
 </div>
 
 
-### Entraînement de modèle
+### Entraînement de modèle (Random Forest Regression)
+
+💡 Objectif du Modèle
+
+Ce modèle de régression est entraîné pour prédire la Velocity Made Course (VMC) du segment (noeuds). Il s'agit de la Vitesse Maximale au Cap, une métrique qui représente la vitesse de progression vers la bouée.
+
+Absolument. Voici une version plus professionnelle et structurée, conçue pour une présentation à un recruteur, en utilisant un langage plus formel et technique.
+
+Modélisation de la Vitesse Maximale au Cap (VMC) avec un Random Forest Regressor
+
+
+1. Variables d'entrée (Features)
+
+
+    Variables quantitatives :
+
+        Longueur totale du parcours (en mètres)
+
+        Température (en °C)
+
+        Pression (en hPa)
+
+        Humidité (en %)
+
+        Vitesse du vent (en nœuds)
+
+        Classement entrée de segment
+
+    Variables qualitatives :
+
+        Allure
+
+        Sexe
+
+Ces variables qualitatives ont été encodées numériquement via une technique de One-Hot Encoding afin d'être intégrées au modèle de machine learning.
+
+2. Optimisation des hyperparamètres (Grid Search)
+
+Afin de garantir la robustesse et la performance du modèle, j'ai mis en œuvre une approche de recherche par grille (Grid Search). Cette méthode a permis de tester de manière exhaustive différentes combinaisons d'hyperparamètres pour le Random Forest Regressor et d'identifier la configuration optimale. Les paramètres que j'ai optimisés sont les suivants :
+
+    n_estimators : Le nombre d'arbres dans la forêt (testé : 100, 200).
+
+    max_depth : La profondeur maximale de chaque arbre (testée : 10, 20, 30).
+
+    min_samples_split : Le nombre minimum d'échantillons requis pour diviser un nœud interne (testé : 2, 5, 10).
+
+    min_samples_leaf : Le nombre minimum d'échantillons requis pour former un nœud feuille (testé : 1, 2, 4, 8).
+
+    max_features : Le nombre de features à considérer à chaque division ('sqrt', 'log2', 1.0).
+
+    bootstrap : La méthode d'échantillonnage (True, False).
+
+3. Évaluation de la performance du modèle
+
+Après l'entraînement, la performance du modèle final a été rigoureusement évaluée sur un jeu de données de test indépendant. Les métriques de performance utilisées sont :
+
+    Mean Absolute Error (MAE)
+
+    Mean Squared Error (MSE)
+
+    Coefficient de Détermination (R²)
+
+L'analyse de l'importance des variables, une des forces des algorithmes de type Random Forest, a également été réalisée pour identifier les facteurs les plus influents dans la prédiction de la VMC. 
+
+
+## **Analyse Globale du Graphique**
+
+Ce diagramme à barres horizontales illustre l'**importance relative** de chaque variable (ou "feature") utilisée par le modèle pour effectuer ses prédictions.
+
+* **Axe Y (Variables)** : Liste toutes les variables prises en compte par le modèle, des plus importantes (en haut) aux moins importantes (en bas).
+* **Axe X (Importance - score)** : Représente le score d'importance. 
+
+En résumé, ce graphique vous montre le **classement des facteurs les plus déterminants** pour prédire la performance (VMC) d'un segment de navigation.
+
+---
+
+## **Interprétation Détaillée des Variables Principales**
+
+Les variables en haut du graphique sont les plus prédictives.
+
+1.  **Classement entrée de segment** : C'est de loin la variable la plus importante, avec un score d'environ 0.55.
+    * **Signification** : La position d'un concurrent au début d'un segment est le meilleur prédicteur de sa VMC sur ce même segment.
+    * **Hypothèse** : Les concurrents déjà bien classés ont probablement une meilleure vitesse, une meilleure tactique, ou naviguent dans des conditions de vent plus favorables (air "propre"), ce qui leur permet de maintenir une VMC élevée.
+
+2.  **Wind Speed (kts)** : La vitesse du vent est le deuxième facteur le plus influent (score ≈ 0.17).
+    * **Signification** : Cela confirme une évidence en voile : la vitesse du vent est un moteur fondamental de la performance.
+    * **Hypothèse** : Une augmentation de la vitesse du vent conduit généralement à une augmentation de la VMC, jusqu'à un certain seuil où le bateau devient plus difficile à contrôler.
+
+3.  **Temperature (°C)** et **Humidity (%)** : Ces deux variables météorologiques ont une importance notable et similaire (score ≈ 0.10).
+    * **Signification** : Elles influencent la densité de l'air. Un air plus dense (plus froid et plus sec) exerce une poussée plus forte sur les voiles, ce qui peut améliorer la performance.
+    * **Hypothèse** : Le modèle a appris que ces variations subtiles de la densité de l'air ont un impact quantifiable sur la VMC.
+
+4.  **Orientation vent metasail (sin/cos)** : Ces deux composantes, qui représentent l'angle du vent, ont une importance modérée.
+    * **Signification** : La direction du vent est cruciale pour déterminer l'allure du bateau et donc sa VMC potentielle. Le modèle utilise ces deux variables pour reconstruire l'angle du vent.
+
+---
+
+## **Analyse des Variables Moins Influentes**
+
+Les variables situées en bas du graphique ont un impact très faible sur les prédictions du modèle.
+
+* **Les Allures (Reaching, Portantes, etc.)** : Il est surprenant que les allures spécifiques aient une si faible importance.
+    * **Hypothèse possible** : L'information de l'allure pourrait être déjà implicitement contenue dans la combinaison de la vitesse du vent (`Wind Speed`) et de son orientation (`Orientation vent metasail`). Le modèle pourrait donc considérer ces variables comme redondantes.
+
+* **Sexe (Men/Women)** et **Catégorie d'âge (U17/U19)** : Ces caractéristiques démographiques semblent avoir une influence quasi nulle selon le modèle.
+    * **Signification** : Pour ce jeu de données, les performances (VMC) ne semblent pas dépendre du genre ou de la catégorie d'âge des navigateurs, une fois que les autres facteurs (classement, météo) sont pris en compte.
+
+---
+
+## **Synthèse et 'Interprétation**
+
+### **Template de Rapport d'Analyse d'Importance des Variables**
+
+**Titre :** Analyse de l'Importance des Variables pour la Prédiction de la VMC
+
+**1. Introduction**
+Ce document présente l'analyse de l'importance des variables issues d'un modèle de régression Random Forest. L'objectif du modèle est de prédire la `VMC du segment (noeuds)`. Le graphique ci-dessous classe les variables en fonction de leur contribution à la performance prédictive du modèle.
+
+**2. Analyse des Facteurs Prédictifs Majeurs**
+Le modèle identifie clairement deux catégories principales de facteurs influents : la performance relative et les conditions météorologiques.
+
+* **Facteur de Performance Dominant :**
+    * La variable **`Classement entrée de segment`** est, de manière écrasante, la plus influente (score : [insérer le score, ex: ~0.55]). Cela indique que la performance passée (le classement) est le meilleur indicateur de la performance immédiate. Les leaders tendent à maintenir leur avantage.
+
+* **Facteurs Météorologiques Clés :**
+    * La **`Wind Speed (kts)`** (score : [~0.17]) est le deuxième facteur le plus important, ce qui est cohérent avec les principes fondamentaux de la navigation à voile.
+    * La **`Temperature (°C)`** et l'**`Humidity (%)`** (scores : [~0.10]) jouent également un rôle significatif, probablement en influençant la densité de l'air et donc l'efficacité de la propulsion vélique.
+
+**3. Analyse des Facteurs d'Influence Secondaire**
+Certaines variables, bien que moins critiques, contribuent tout de même au modèle :
+
+* L'**`Orientation vent metasail`** (via ses composantes sinus et cosinus) est modérément importante, soulignant le rôle de l'angle du vent dans la détermination de la VMC.
+
+**4. Variables à Faible Impact**
+Il est notable que plusieurs variables ont une importance prédictive très faible dans ce modèle :
+
+* Les différentes **allures spécifiques** (`Allure_Reaching`, `Allure_Portantes`, etc.) ont un score quasi nul. Cela suggère que leur information est redondante par rapport à d'autres variables plus importantes comme l'angle et la vitesse du vent.
+* Les caractéristiques démographiques comme le **`Sexe`** et la **`Catégorie d'âge`** n'apparaissent pas comme des différenciateurs de performance significatifs dans ce contexte.
+
+**5. Conclusion et Recommandations**
+L'analyse révèle que pour prédire la VMC, le modèle s'appuie principalement sur le **classement actuel du concurrent et les conditions météorologiques** (vitesse du vent, température, humidité).
+
+* **Recommandation Opérationnelle :** Pour améliorer la performance, l'accent doit être mis sur les stratégies permettant de gagner et de conserver un bon classement (tactique, départs).
+* **Recommandation pour le Modèle :** Étant donné la faible importance de certaines variables, une simplification du modèle en retirant les caractéristiques les moins pertinentes pourrait être envisagée pour réduire la complexité et potentiellement améliorer la généralisation, bien que les modèles de type "forêt" soient robustes à ce genre de situation.
 
 
