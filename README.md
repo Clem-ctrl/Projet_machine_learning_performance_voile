@@ -309,7 +309,7 @@ Sexe_Women                         0.012151
 
 ---
 
-### **Interprétation Détaillée des Variables Principales**
+### **Interprétation des variables principales**
 
 Les variables en haut du graphique sont celles que le modèle a jugées les plus décisives pour prédire la VMC (Velocity Made Course).
 
