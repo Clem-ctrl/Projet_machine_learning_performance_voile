@@ -205,7 +205,7 @@ Explorez la relation entre la vitesse du vent, les allures de navigation et la p
 </div>
 
 
-### Entraînement de modèle (Random Forest Regression)
+# Entraînement de modèle (Random Forest Regression)
 
 💡 Objectif du Modèle
 
@@ -347,7 +347,7 @@ Ces variables, situées en bas du graphique, ont un impact plus faible sur les p
 
 ---
 
-### **Synthèse et recommandations**
+### **4. Synthèse et recommandations**
 
 #### **Synthèse**
 
