@@ -215,7 +215,7 @@ Ce modèle de régression est entraîné pour prédire la Velocity Made Course (
 Modélisation de la Vitesse Maximale au Cap (VMC) avec un Random Forest Regressor
 
 
-1. Variables d'entrée (Features)
+## 1. Variables d'entrée (Features)
 
 
     Variables quantitatives :
@@ -240,7 +240,7 @@ Modélisation de la Vitesse Maximale au Cap (VMC) avec un Random Forest Regresso
 
 Ces variables qualitatives ont été encodées numériquement via une technique de One-Hot Encoding afin d'être intégrées au modèle de machine learning.
 
-2. Optimisation des hyperparamètres (Grid Search)
+## 2. Optimisation des hyperparamètres (Grid Search)
 
 Afin de garantir la robustesse et la performance du modèle, j'ai mis en œuvre une approche de recherche par grille (Grid Search). Cette méthode a permis de tester de manière exhaustive différentes combinaisons d'hyperparamètres pour le Random Forest Regressor et d'identifier la configuration optimale. Les paramètres que j'ai optimisés sont les suivants :
 
@@ -256,7 +256,7 @@ Afin de garantir la robustesse et la performance du modèle, j'ai mis en œuvre 
 
     bootstrap : La méthode d'échantillonnage (True, False).
 
-3. Résultats  de la performance du modèle
+## 3. Résultats  de la performance du modèle
 
 **Meilleurs hyperparamètres trouvés :** 
 {'bootstrap': True, 'max_depth': 20, 'max_features': 'sqrt', 'min_samples_leaf': 2, 'min_samples_split': 10, 'n_estimators': 100}
@@ -326,7 +326,7 @@ Les variables en haut du graphique sont celles que le modèle a jugées les plus
 
 3.  **Classement entrée de segment** : Ce facteur reste un prédicteur très fort (score ≈ 0.11).
     * **Signification** : Comme dans l'analyse précédente, la position d'un bateau au début d'un segment est un excellent indicateur de sa performance future sur ce même segment.
-    * **Hypothèse** : Les leaders naviguent souvent dans un vent "propre" (non perturbé par les autres bateaux) et ont démontré une vitesse ou une tactique supérieure, qu'ils tendent à maintenir. Les leaders auront certainement une VMC légèrement supérieure dûe à leur niveau de navigation général et sur la course en particulier. 
+    * **Hypothèse** : Les leaders naviguent souvent dans un vent "propre" (non perturbé par les autres bateaux) et ont démontré une vitesse ou une tactique supérieure, qu'ils tendent à maintenir. De plus, les leaders auront certainement une VMC légèrement supérieure dûe à leur niveau de navigation général et sur la course en particulier. 
 
 4.  **Allure_Reaching** : Le reaching (vent de travers) est également très important (score ≈ 0.10).
     * **Signification** : Le reaching est généralement l'allure la plus rapide pour un voilier.
