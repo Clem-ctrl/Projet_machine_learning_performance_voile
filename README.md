@@ -272,21 +272,35 @@ Coefficient de Détermination (R²) : 0.68
 
 
 Importance des variables pour la prédiction de 'VMC du segment (noeuds)':
+
 Allure_Vent debout                 0.242579
+
 Longueur totale du parcours (m)    0.183537
+
 Classement entrée de segment       0.101078
+
 Allure_Reaching                    0.096722
+
 Humidity (%)                       0.078402
+
 Wind Speed (kts)                   0.073492
+
 Temperature (°C)                   0.061241
+
 Pressure (hPa)                     0.039830
+
 Allure_Allures remontantes         0.038490
+
 Allure_Allures portantes           0.034117
+
 Allure_Vent arrière                0.019631
+
 Sexe_Men                           0.018730
+
 Sexe_Women                         0.012151
 
-## **Analyse Globale du Graphique**
+
+## **Analyse du Graphique**
 <img width="1200" height="800" alt="Figure_VMC_prediction" src="https://github.com/user-attachments/assets/f938a67e-b291-4fb1-b335-ea3f843dff51" />
 
 Ce diagramme à barres horizontales illustre l'**importance relative** de chaque variable (ou "feature") utilisée par le modèle pour effectuer ses prédictions.
