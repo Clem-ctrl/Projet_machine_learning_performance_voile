@@ -261,10 +261,15 @@ Afin de garantir la robustesse et la performance du modèle, j'ai mis en œuvre 
 3. Résultats  de la performance du modèle
 
  Meilleurs hyperparamètres trouvés : {'bootstrap': True, 'max_depth': 20, 'max_features': 'sqrt', 'min_samples_leaf': 2, 'min_samples_split': 10, 'n_estimators': 100}
+ 
 ✅  Métriques d'évaluation du meilleur modèle :
+
 Erreur Absolue Moyenne (MAE) : 2.01
+
 Erreur Quadratique Moyenne (MSE) : 8.28
+
 Coefficient de Détermination (R²) : 0.68
+
 
 Importance des variables pour la prédiction de 'VMC du segment (noeuds)':
 Allure_Vent debout                 0.242579
