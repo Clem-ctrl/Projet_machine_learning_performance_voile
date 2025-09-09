@@ -347,7 +347,7 @@ Ces variables, situées en bas du graphique, ont un impact plus faible sur les p
 
 ---
 
-### **Synthèse et Interprétation**
+### **Synthèse et recommandations**
 
 #### **Synthèse**
 
