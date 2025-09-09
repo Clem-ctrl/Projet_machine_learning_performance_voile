@@ -211,8 +211,6 @@ Explorez la relation entre la vitesse du vent, les allures de navigation et la p
 
 Ce modèle de régression est entraîné pour prédire la Velocity Made Course (VMC) du segment (noeuds), une métrique qui représente la vitesse de progression vers la bouée.
 
-Modélisation de la Velocity Made Course (VMC) avec un Random Forest Regressor
-
 
 ## 1. Variables d'entrée (Features)
 
