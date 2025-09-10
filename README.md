@@ -200,7 +200,7 @@ Explorez la relation entre la vitesse du vent, les allures de navigation et la p
 
 <div align="center">
   <a href="https://remicorniere.github.io/test_pages/">
-    <img src="https://via.placeholder.com/600x300.png?text=Cliquez+ici+pour+la+visualisation+interactive" alt="Bouton de visualisation interactive">
+    <img src="https://via.placeholder.com/600x300.png?text=Cliquez+ici+pour+la+visualisation+interactive" alt="Visualisation interactive">
   </a>
 </div>
 
