@@ -199,11 +199,10 @@ Pour être en conformité, vous devez notamment :
 Explorez la relation entre la vitesse du vent, les allures de navigation et la performance des athlètes grâce à notre graphique interactif.
 
 <div align="center">
-  <a href="https://raw.githubusercontent.com/Clem-ctrl/Projet_machine_learning_performance_voile/main/Visualisations/visualisation_dynamique_vitesse_vent_et_allure_esthetique.html" download>
-    <img src="https://via.placeholder.com/600x300.png?text=Bouton+de+visualisation+interactive" alt="Bouton de visualisation interactive">
+  <a href="https://remicorniere.github.io/test_pages/">
+    <img src="https://via.placeholder.com/600x300.png?text=Cliquez+ici+pour+la+visualisation+interactive" alt="Bouton de visualisation interactive">
   </a>
 </div>
-
 
 # Entraînement de modèle (Random Forest Regression)
 
