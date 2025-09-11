@@ -238,7 +238,9 @@ Ces variables qualitatives ont été encodées numériquement via une technique 
 
 ## 2. Optimisation des hyperparamètres (Grid Search)
 
-Afin de garantir la robustesse et la performance du modèle, j'ai mis en œuvre une approche de recherche par grille (Grid Search). Cette méthode a permis de tester de manière exhaustive différentes combinaisons d'hyperparamètres pour le Random Forest Regressor et d'identifier la configuration optimale. Les paramètres que j'ai optimisés sont les suivants :
+Afin de garantir la robustesse et la performance du modèle, j'ai mis en œuvre une approche de recherche par grille (Grid Search). Cette méthode a permis de tester de manière exhaustive différentes combinaisons d'hyperparamètres pour le Random Forest Regressor et d'identifier la configuration optimale. Une validation croisée à 3 plis (3-fold cross-validation) a été utilisée pour évaluer chaque combinaison d'hyperparamètres du param_grid sur l'ensemble de données d'entraînement.
+
+Les paramètres que j'ai optimisés sont les suivants :
 
     n_estimators : Le nombre d'arbres dans la forêt (testé : 100, 200).
 
