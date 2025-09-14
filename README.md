@@ -52,6 +52,7 @@ Ce projet est un exemple d'exploration statistique mobilisant des données de na
 <td style="text-align:center; padding:0; border:none;">
 <img width="1405" height="3839" alt="DDF_API_Openweathermap" src="https://github.com/user-attachments/assets/184b0eba-06f0-4e17-9d5f-4f8bcd33345c" />
 </td>
+<td style="text-align:center; padding:0; border:none;">
 <img width="930" height="3840" alt="DDF_cleaning" src="https://github.com/user-attachments/assets/0aed3364-666f-4631-8569-575ca7ed6c14" />
 </td>
 <td style="text-align:center; padding:0; border:none;">
