@@ -47,19 +47,18 @@ Ce projet est un exemple d'exploration statistique mobilisant des données de na
 <tbody>
 <tr style="border:none;">
 <td style="text-align:center; padding:0; border:none;">
-<img src="https://github.com/user-attachments/assets/2f210fcd-6d46-4aef-99ed-07d5a9ded3da" width="250" alt="DDF_scraping" />
+<img width="1270" height="3840" alt="DDF_scraping_metasail" src="https://github.com/user-attachments/assets/834c7766-3ac3-459f-8b01-cdc645fa764f" />
 </td>
 <td style="text-align:center; padding:0; border:none;">
-<img src="https://github.com/user-attachments/assets/1e773618-b806-47cc-bfed-78eabd4022f9" width="250" alt="DDF_API_Openweathermap" />
+<img width="1405" height="3839" alt="DDF_API_Openweathermap" src="https://github.com/user-attachments/assets/184b0eba-06f0-4e17-9d5f-4f8bcd33345c" />
+</td>
+<img width="930" height="3840" alt="DDF_cleaning" src="https://github.com/user-attachments/assets/0aed3364-666f-4631-8569-575ca7ed6c14" />
 </td>
 <td style="text-align:center; padding:0; border:none;">
-<img src="https://github.com/user-attachments/assets/2b526e0d-2757-4970-8eab-8769e2153bfc" width="250" alt="DDF_cleaning" />
+<img width="1439" height="3840" alt="DDF_Processing" src="https://github.com/user-attachments/assets/a6b5b5b8-b321-46f8-b570-1982fa0d0138" />
 </td>
 <td style="text-align:center; padding:0; border:none;">
-<img src="https://github.com/user-attachments/assets/19ee963b-d696-42ff-8a70-87a66bbe42e0" width="250" alt="DDF_Processing" />
-</td>
-<td style="text-align:center; padding:0; border:none;">
-<img src="https://github.com/user-attachments/assets/654d2b7d-ffd4-4c18-9f80-f490cb8f8a5c" width="250" alt="DDF_RFR" />
+<img width="633" height="3839" alt="DDF_RFR" src="https://github.com/user-attachments/assets/96280402-5472-4e78-b287-17240f163a7c" />
 </td>
 <td style="text-align:center; padding:0; border:none;">
 <img src="https://github.com/user-attachments/assets/2bebdd13-4459-423a-9fd4-74e4672573e8" width="250" alt="DDF-visualisations" />
