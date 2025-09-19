@@ -225,7 +225,7 @@ Couleur des points : La couleur d'un point indique la valeur de la variable pour
 
 Dispersion des points : La dispersion des points sur l'axe horizontal indique l'importance de la variable. Plus les points sont étalés loin de 0, plus la variable a un impact important, qu'il soit positif ou négatif.
 
-Résulats : 
+#### Résulats 
 
 Les facteurs influençant positivement la VMC de manière la moins équivoque sont le sexe, l'âge, le classement d'entrée du segment, la température, la pression atmosphérque : 
 - Les hommes seniors premiers dans le classement à l'entrée du segment, dans des conditions de température modérée à élevées et de pression élevées ont la VMC prédite la plus élevée.
