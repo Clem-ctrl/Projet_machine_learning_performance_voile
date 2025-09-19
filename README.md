@@ -204,12 +204,46 @@ Explorez la relation entre la vitesse du vent, les allures de navigation et la p
   </a>
 </div>
 
+Voici un SHAP plot qui permet de comprendre pourquoi un modèle d'apprentissage automatique (ici une régression en forêt aléatoire) a fait une prédiction particulière. Il  montre l'impact de chaque variable d'entrée sur la prédiction finale du modèle.
+Ce modèle de régression est entraîné pour prédire la Velocity Made Course (VMC) du segment (noeuds), une métrique qui représente la vitesse de progression vers la bouée.
+
+<img width="2400" height="2490" alt="VMC_SHAP_summary_plot_Metasail_Statistics_VF_processed_2025-09-19_09-45-51" src="https://github.com/user-attachments/assets/45ae2521-38b5-4396-84f4-e69d70e39240" />
+
+Axe horizontal (valeur SHAP) : Cet axe indique l'impact de la variable sur la prédiction du modèle.
+
+    Les points à droite de 0 ont un impact positif (ils augmentent la prédiction).
+
+    Les points à gauche de 0 ont un impact négatif (ils diminuent la prédiction).
+
+Axe vertical (variables) : Chaque ligne du graphique représente une variable de votre modèle, triée par ordre d'importance (les plus importantes sont en haut).
+
+Couleur des points : La couleur d'un point indique la valeur de la variable pour cette instance.
+
+    Les points rouges représentent généralement une valeur élevée de la variable.
+
+    Les points bleus représentent une valeur faible de la variable.
+
+Dispersion des points : La dispersion des points sur l'axe horizontal indique l'importance de la variable. Plus les points sont étalés loin de 0, plus la variable a un impact important, qu'il soit positif ou négatif.
+
+Résulats : 
+
+Les facteurs influençant positivement la VMC de manière la moins équivoque sont le sexe, l'âge, le classement d'entrée du segment, la température, la pression atmosphérque : 
+- Les hommes seniors premiers dans le classement à l'entrée du segment, dans des conditions de température modérée à élevées et de pression élevées ont la VMC prédite la plus élevée.
+
+Les facteurs influençant négativement la VMC de manière la moins équivoque sont l'humidité, certaines allures, la distance parcourue, l'âge et le sexe. 
+- Les départs présentent la VMC la plus faible. Les catégories féminines, plus jeunes et les concurrents en queue de peloton vont moins vite vers la bouée. L'humidité élevée, la progression avec le vent dans l'axe de la bouée prédisent une VMC inférieure.
+
+  
+A noter que contre-intuitivement, l'allure de reaching est associée à une VMC prédite inférieure. Il est possible que la source des données d'orientation de vent (site web Metasail) ne soit pas fiable. 
+Une analyse est en cours pour produire une visualisation avec une autre source de données (OpenWeatherMaps). 
+
+
 # Entraînement de modèle (Random Forest Regression)
 
 💡 Objectif du Modèle
 
-Ce modèle de régression est entraîné pour prédire la Velocity Made Course (VMC) du segment (noeuds), une métrique qui représente la vitesse de progression vers la bouée.
 
+Ce modèle de régression est entraîné pour prédire la Velocity Made Course (VMC) du segment (noeuds), une métrique qui représente la vitesse de progression vers la bouée.
 
 ## 1. Variables d'entrée (Features)
 
