@@ -6,7 +6,7 @@
 >
 > **Le problème** : En IQFoil (planche à voile sur hydrofoil), les entraîneurs ajustent les réglages et la stratégie de course à l'intuition. **Aucune donnée structurée** ne leur permet d'identifier quels facteurs (allure, vent, parcours, classement) pèsent réellement sur la **vitesse de progression vers la bouée (VMC)**.
 >
-> **Ce que j'ai fait** : Pipeline **end-to-end** — scraping des données de navigation Metasail (**Selenium**), appel **API OpenWeatherMap** pour les conditions météo, nettoyage et fusion des datasets, feature engineering (speed-to-wind ratio, encodage circulaire des angles), puis entraînement d'un modèle **Random Forest Regression** optimisé par **Grid Search**.
+> **Ce que j'ai fait** : Pipeline **end-to-end** — scraping des données de navigation Metasail (**Selenium**) sur 6 compétitions internationales (300+ coureurs, 50+ courses, 55k lignes de données), appel **API OpenWeatherMap** pour les conditions météo, nettoyage et fusion des datasets, feature engineering (speed-to-wind ratio, encodage circulaire des angles), puis entraînement d'un modèle **Random Forest Regression** optimisé par **Grid Search**.
 >
 > **Compétences mobilisées** : `Web scraping` · `API REST` · `Pandas` · `Feature engineering` · `Scikit-learn` · `Random Forest` · `Grid Search` · `SHAP` · `Data visualization` · `RGPD`
 >
