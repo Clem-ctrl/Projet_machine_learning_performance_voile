@@ -1,5 +1,18 @@
 # Modélisation de la performance en IQFoil jeunes à partir de données de navigation et de conditions météo.
 
+
+> [!NOTE]
+> ## 🧭 Étude de cas — Prédire la vitesse de progression en régate d'IQFoil
+>
+> **Le problème** : En IQFoil (planche à voile sur hydrofoil), les entraîneurs ajustent les réglages et la stratégie de course à l'intuition. **Aucune donnée structurée** ne leur permet d'identifier quels facteurs (allure, vent, parcours, classement) pèsent réellement sur la **vitesse de progression vers la bouée (VMC)**.
+>
+> **Ce que j'ai fait** : Pipeline **end-to-end** — scraping des données de navigation Metasail (**Selenium**), appel **API OpenWeatherMap** pour les conditions météo, nettoyage et fusion des datasets, feature engineering (speed-to-wind ratio, encodage circulaire des angles), puis entraînement d'un modèle **Random Forest Regression** optimisé par **Grid Search**.
+>
+> **Compétences mobilisées** : `Web scraping` · `API REST` · `Pandas` · `Feature engineering` · `Scikit-learn` · `Random Forest` · `Grid Search` · `SHAP` · `Data visualization` · `RGPD`
+>
+> **Résultat** : Le modèle prédit la VMC à **±2 nœuds** (MAE = 2.01, R² = 0.68) et révèle que **l'allure au vent debout** et la **longueur du parcours** sont les deux facteurs les plus déterminants — un insight contre-intuitif qui ouvre des **pistes concrètes d'entraînement** pour les équipes techniques.
+>
+> 
 ## ETL fonctionnel basé sur le webscraping Metasail et Openweathermaps aboutissant sur une régression Random Forest pour explorer les enjeux de course en IQFOIL (planche à voile + hydrofoil).
 Ce projet permet de prédire la vitesse de coureurs de niveau national et international à 2 noeuds près à partir des données de configuration du parcours de course et de météorologie.
 
